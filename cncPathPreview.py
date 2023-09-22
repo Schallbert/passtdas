@@ -41,25 +41,22 @@ def handle_start_state_overflow(state):
         state -= 4
     return state
 
-def get_arc_case(coordinates):
+def get_arc_case(coordinates, arc_center):
     xy = 0
-    xy += 2*((coordinates[0]-coordinates[3]) >= 0)  # x positive? +2
-    xy += (coordinates[1]-coordinates[4]) >= 0  # y positive? +1
+    xy += 2*((coordinates[0] - arc_center[0]) >= 0)  # x positive? +2
+    xy += (coordinates[1] - arc_center[1]) >= 0  # y positive? +1
     return xy
 
 def handle_arc_commands(previous_coordinates, line):
     coordinates = parse_coordinates(line)
+    arc_center = (previous_coordinates[0] + coordinates[3], previous_coordinates[1] + coordinates[4])
     if line.find('G02') > -1:
-        previous_coordinates[3] = coordinates[3]
-        previous_coordinates[4] = coordinates[4]
-        end_state = get_arc_case(previous_coordinates)
-        start_state = get_arc_case(coordinates)
+        end_state = get_arc_case(previous_coordinates, arc_center)
+        start_state = get_arc_case(coordinates, arc_center)
 
     elif line.find('G03') > -1:
-        previous_coordinates[3] = coordinates[3]
-        previous_coordinates[4] = coordinates[4]
-        end_state = get_arc_case(coordinates)
-        start_state = get_arc_case(previous_coordinates)
+        end_state = get_arc_case(coordinates, arc_center)
+        start_state = get_arc_case(previous_coordinates, arc_center)
     else:
         return [] #  command does not fit move pattern and will not count.
 
@@ -72,23 +69,27 @@ def handle_arc_commands(previous_coordinates, line):
     y_minus_radius = [coordinates[0], coordinates[4] - radius, coordinates[2]]
     extremevalue_order = [y_minus_radius, x_minus_radius, x_plus_radius, y_plus_radius]
 
-    statediff = end_state - start_state
+    statediff = abs(end_state - start_state)
     print(radius)
-    print(line)
+    print(coordinates)
+    print(previous_coordinates)
     print(start_state)
     print(end_state)
     # same quadrant?
     if statediff == 0:
-        if previous_coordinates[start_state] >= coordinates[start_state]:
-            # near full circle, return all four possible max/min points
-            statediff = 4
+        # near full circle, return all four possible max/min points
+        if start_state == 0 or start_state == 3:
+            if previous_coordinates[0] <= coordinates[0]:
+                statediff = 4
+        elif start_state == 2 or start_state == 1:
+            if previous_coordinates[0] >= coordinates[0]:
+                statediff = 4
 
     result = []
     print(statediff)
     # crossing one, two or three quadrants
     for i in range(statediff):
-        print(i)
-        result.append(extremevalue_order[start_state + i])
+        result.append(extremevalue_order[handle_start_state_overflow(start_state + i)])
 
     result.append(xyz)
     return result
