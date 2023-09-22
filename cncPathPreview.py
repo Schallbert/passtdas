@@ -1,5 +1,7 @@
+import math
+
 import click
-from math import sqrt
+from math import sqrt, acos, pi, degrees
 
 def has_move_command(line):
     if line:
@@ -41,57 +43,56 @@ def handle_start_state_overflow(state):
         state -= 4
     return state
 
-def get_arc_case(coordinates, arc_center):
-    xy = 0
-    xy += 2*((coordinates[0] - arc_center[0]) >= 0)  # x positive? +2
-    xy += (coordinates[1] - arc_center[1]) >= 0  # y positive? +1
-    return xy
+def get_arc_case(coordinates, arc_center, radius):
+    if radius == 0:
+        return 0
+    # cos = dx / radius
+    rad = acos((coordinates[0] - arc_center[0]) / radius)
+    if coordinates[1] < 0:
+        #  negative y, add 180°
+        rad += pi()
+    return degrees(rad)
+
 
 def handle_arc_commands(previous_coordinates, line):
     coordinates = parse_coordinates(line)
+    radius = sqrt(coordinates[3] ** 2 + coordinates[4] ** 2)
     arc_center = (previous_coordinates[0] + coordinates[3], previous_coordinates[1] + coordinates[4])
-    if line.find('G02') > -1:
-        end_state = get_arc_case(previous_coordinates, arc_center)
-        start_state = get_arc_case(coordinates, arc_center)
 
+    if line.find('G02') > -1:
+        arc_start = get_arc_case(coordinates, arc_center, radius)
+        arc_end = get_arc_case(previous_coordinates, arc_center, radius)
     elif line.find('G03') > -1:
-        end_state = get_arc_case(coordinates, arc_center)
-        start_state = get_arc_case(previous_coordinates, arc_center)
+        arc_start = get_arc_case(previous_coordinates, arc_center, radius)
+        arc_end = get_arc_case(coordinates, arc_center, radius)
+
     else:
         return [] #  command does not fit move pattern and will not count.
 
     # min/max calculations needed later on
     xyz = [coordinates[0], coordinates[1], coordinates[2]]
-    radius = sqrt(coordinates[3] ** 2 + coordinates[4] ** 2)
     x_plus_radius = [coordinates[3] + radius, coordinates[1], coordinates[2]]
     y_plus_radius = [coordinates[0], coordinates[4] + radius, coordinates[2]]
     x_minus_radius = [coordinates[3] - radius, coordinates[1], coordinates[2]]
     y_minus_radius = [coordinates[0], coordinates[4] - radius, coordinates[2]]
-    extremevalue_order = [y_minus_radius, x_minus_radius, x_plus_radius, y_plus_radius]
+    extremevalue_order = [0, y_plus_radius, x_minus_radius, y_minus_radius, x_plus_radius]
 
-    statediff = abs(end_state - start_state)
-    print(radius)
-    print(coordinates)
-    print(previous_coordinates)
-    print(start_state)
-    print(end_state)
-    # same quadrant?
-    if statediff == 0:
-        # near full circle, return all four possible max/min points
-        if start_state == 0 or start_state == 3:
-            if previous_coordinates[0] <= coordinates[0]:
-                statediff = 4
-        elif start_state == 2 or start_state == 1:
-            if previous_coordinates[0] >= coordinates[0]:
-                statediff = 4
+    arcdiff = arc_end - arc_start
+    if arcdiff < 0:
+        # crossing the 0° line (x-axis)
+        arc_end += 360
+
+    print(arc_start)
+    print(arc_end)
 
     result = []
-    print(statediff)
-    # crossing one, two or three quadrants
-    for i in range(statediff):
-        result.append(extremevalue_order[handle_start_state_overflow(start_state + i)])
+    for crossing_angle in range (90, 361, 90):
+        if crossing_angle in range(int(arc_start), int(arc_end)):
+            print(crossing_angle)
+            result.append(extremevalue_order[int(crossing_angle/90)])
 
     result.append(xyz)
+    print(result)
     return result
 
 
