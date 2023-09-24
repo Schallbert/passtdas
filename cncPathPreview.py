@@ -55,12 +55,12 @@ def get_arc_degrees(coordinates, arc_center, radius):
     if radius <= 0:
         return 0
     # cos = dx / radius
-    cos = round((coordinates[0] - arc_center[0]) / radius, 3)
+    cos = (coordinates[0] - arc_center[0]) / radius
     rad = acos(cos)
-    if coordinates[1] < 0:
-        #  negative y, add 180°
-        rad += pi
-    return degrees(rad)
+    if (coordinates[1] - arc_center[1]) < 0:
+        #  negative y, count from 360° backwards
+        rad = 2*pi - rad
+    return round(degrees(rad), 0)
 
 def fill_coordinates(coordinates, previous_coordinates):
     """helper that removes 'None' values from a line by filling with last known coordinate values
@@ -94,7 +94,6 @@ def handle_arc_move(line, previous_coordinates):
     elif line.find('G03') > -1:
         arc_start = get_arc_degrees(previous_coordinates, arc_center, radius)
         arc_end = get_arc_degrees(coordinates, arc_center, radius)
-
     else:
         return [] #  command does not fit move pattern and will not count.
 
@@ -109,12 +108,10 @@ def handle_arc_move(line, previous_coordinates):
     extremevalue_order = [0, y_plus_radius, x_minus_radius, y_minus_radius, x_plus_radius]
 
     arcdiff = arc_end - arc_start
+
     if arcdiff < 0:
         # crossing the 0° line (x-axis)
         arc_end += 360
-
-    #print(arc_start)
-    #print(arc_end)
 
     result = []
     for crossing_angle in range (90, 361, 90):
@@ -173,8 +170,6 @@ def hello(file, name):
 
         f.write('M30')
         f.close()
-
-
 
     print(get_max_by_column(data, 0))
     print(get_min_by_column(data, 0))
