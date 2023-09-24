@@ -3,19 +3,28 @@ import math
 import click
 from math import sqrt, acos, pi, degrees
 
-def has_move_command(line):
-    if line:
-        return line.find('G00') > -1 or line.find('G01') > -1
+def is_move(command):
+    """Checks if input G-code line is a linear move (rapid or with feed rate) command.
+    @:param line: The G-code input line
+    @:return True if the line is a linear move, False if not."""
+    if command:
+        return command.find('G00') > -1 or command.find('G01') > -1
+    return False
 
-
-def has_arc_command(line):
-    if line:
-        return line.find('G02') > -1 or line.find('G03') > -1
-
+def is_arc(command):
+    """Checks if input G-code line is a circular arc (clockwise or counter-clockwise) command.
+    @:param command: The G-code input line
+    @:return True if the line is an arc move, False if not."""
+    if command:
+        return (command.find('G02') > -1) or (command.find('G03') > -1)
+    return False
 
 def parse_coordinates(line):
+    """Reads a move command and converts it into a float value set
+    @:param line: a move command
+    @:return a float value set."""
     values = line.split(' ')
-    coordinate = [0, 0, 25, 0, 0]
+    coordinate = [None, None, None, None, None]
     for value in values:
         if value.find('X') > -1:
             coordinate[0] = float(value.strip('X '))
@@ -38,43 +47,52 @@ def get_max_by_column(data, column_index):
 def get_min_by_column(data, column_index):
     return min(data, key=lambda x: x[column_index - 1])
 
-def handle_start_state_overflow(state):
-    if state > 3:
-        state -= 4
-    return state
 
-def get_arc_case(coordinates, arc_center, radius):
-    if radius == 0:
+def get_arc_degrees(coordinates, arc_center, radius):
+    if radius <= 0:
         return 0
     # cos = dx / radius
-    rad = acos((coordinates[0] - arc_center[0]) / radius)
+    cos = round((coordinates[0] - arc_center[0]) / radius, 3)
+    rad = acos(cos)
     if coordinates[1] < 0:
         #  negative y, add 180°
-        rad += pi()
+        rad += pi
     return degrees(rad)
 
+def fill_coordinates(coordinates, previous_coordinates):
+    for i in range(0, 3):
+        if coordinates[i] is None:
+            coordinates[i] = previous_coordinates[i]
+    return coordinates
 
-def handle_arc_commands(previous_coordinates, line):
+def handle_linear_move(line, previous_coordinates):
+    coordinates =  fill_coordinates(parse_coordinates(line), previous_coordinates)
+    return [coordinates[0], coordinates[1], coordinates[2]]
+
+def handle_arc_move(line, previous_coordinates):
     coordinates = parse_coordinates(line)
+    coordinates = fill_coordinates(coordinates, previous_coordinates)
     radius = sqrt(coordinates[3] ** 2 + coordinates[4] ** 2)
     arc_center = (previous_coordinates[0] + coordinates[3], previous_coordinates[1] + coordinates[4])
 
     if line.find('G02') > -1:
-        arc_start = get_arc_case(coordinates, arc_center, radius)
-        arc_end = get_arc_case(previous_coordinates, arc_center, radius)
+        arc_start = get_arc_degrees(coordinates, arc_center, radius)
+        arc_end = get_arc_degrees(previous_coordinates, arc_center, radius)
     elif line.find('G03') > -1:
-        arc_start = get_arc_case(previous_coordinates, arc_center, radius)
-        arc_end = get_arc_case(coordinates, arc_center, radius)
+        arc_start = get_arc_degrees(previous_coordinates, arc_center, radius)
+        arc_end = get_arc_degrees(coordinates, arc_center, radius)
 
     else:
         return [] #  command does not fit move pattern and will not count.
 
     # min/max calculations needed later on
     xyz = [coordinates[0], coordinates[1], coordinates[2]]
-    x_plus_radius = [coordinates[3] + radius, coordinates[1], coordinates[2]]
-    y_plus_radius = [coordinates[0], coordinates[4] + radius, coordinates[2]]
-    x_minus_radius = [coordinates[3] - radius, coordinates[1], coordinates[2]]
-    y_minus_radius = [coordinates[0], coordinates[4] - radius, coordinates[2]]
+    x_center = previous_coordinates[0] + coordinates[3]
+    y_center = previous_coordinates[1] + coordinates[4]
+    x_plus_radius = [x_center + radius, y_center, coordinates[2]]
+    y_plus_radius = [x_center, y_center + radius, coordinates[2]]
+    x_minus_radius = [x_center - radius, y_center, coordinates[2]]
+    y_minus_radius = [x_center, y_center - radius, coordinates[2]]
     extremevalue_order = [0, y_plus_radius, x_minus_radius, y_minus_radius, x_plus_radius]
 
     arcdiff = arc_end - arc_start
@@ -82,17 +100,15 @@ def handle_arc_commands(previous_coordinates, line):
         # crossing the 0° line (x-axis)
         arc_end += 360
 
-    print(arc_start)
-    print(arc_end)
+    #print(arc_start)
+    #print(arc_end)
 
     result = []
     for crossing_angle in range (90, 361, 90):
         if crossing_angle in range(int(arc_start), int(arc_end)):
-            print(crossing_angle)
             result.append(extremevalue_order[int(crossing_angle/90)])
 
     result.append(xyz)
-    print(result)
     return result
 
 
@@ -109,23 +125,23 @@ def hello(file, name):
     with file as f:
         lines = f.readlines()
 
-        previous_xy_command = []
+        previous_coordinates = [0, 0, 0]
         for line in lines:
             line = line.strip()
-            if has_move_command(line):
-                data.append(parse_coordinates(line))
-            if has_arc_command(line):
-                lines = handle_arc_commands(previous_xy_command, line)
+            if is_move(line):
+                data.append(handle_linear_move(line, previous_coordinates))
+            elif is_arc(line):
+                extreme_values = handle_arc_move(line, previous_coordinates)
                 if lines:
-                    data.extend(lines)
+                    data.extend(extreme_values)
             if data:
-                if data[-1][0] != 0 and data[-1][1] != 0:
-                    previous_xy_command = data[-1]
+                previous_coordinates = data[-1]
 
-    # data = list(enumerate(data))  # create enumerated list out of data
-    #print(get_max_by_column(data, 1))
-    #print(get_min_by_column(data, 1))
-
+    print(get_max_by_column(data, 0))
+    print(get_min_by_column(data, 0))
+    print(get_max_by_column(data, 1))
+    print(get_min_by_column(data, 1))
+    print(get_min_by_column(data, 2))
 
 if __name__ == "__main__":
     hello()
