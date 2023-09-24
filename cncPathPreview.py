@@ -40,15 +40,18 @@ def parse_coordinates(line):
 
 
 def get_max_by_column(data, column_index):
-    # column_index - 1 is used to 'hide' the fact lists' indexes are zero-based from the caller
-    return max(data, key=lambda x: x[column_index - 1])
-
+    """@:param data: the input list, column_index: the column to find the max for
+    @:return the line that contains the maximum value of a given column"""
+    return max(data, key=lambda x: x[column_index])
 
 def get_min_by_column(data, column_index):
-    return min(data, key=lambda x: x[column_index - 1])
-
+    """@:param data: the input list, column_index: the column to find the min for
+    @:return the line that contains the minimum value of a given column"""
+    return min(data, key=lambda x: x[column_index])
 
 def get_arc_degrees(coordinates, arc_center, radius):
+    """@:param coordinates: the input vector, arc_center: coordinates, radius: arc radius
+    @:return arc's length in degrees"""
     if radius <= 0:
         return 0
     # cos = dx / radius
@@ -60,16 +63,26 @@ def get_arc_degrees(coordinates, arc_center, radius):
     return degrees(rad)
 
 def fill_coordinates(coordinates, previous_coordinates):
+    """helper that removes 'None' values from a line by filling with last known coordinate values
+    @:param coordinates: the current target vector, previous_coordinates: valid target vector from the past
+    @:return the filled coordinate vector"""
     for i in range(0, 3):
         if coordinates[i] is None:
             coordinates[i] = previous_coordinates[i]
     return coordinates
 
 def handle_linear_move(line, previous_coordinates):
+    """handles a linear move command by parsing into floats, filling in 'None values'.
+    @:param line: an input command, previous_coordinates: a valid target coordinate from the past
+    @:return a valid coordinate"""
     coordinates =  fill_coordinates(parse_coordinates(line), previous_coordinates)
     return [coordinates[0], coordinates[1], coordinates[2]]
 
 def handle_arc_move(line, previous_coordinates):
+    """handles an arc move command by parsing into floats, filling in 'None values', finding out movement direction,
+    arc radius, span, and position. It then finds the arc's extreme values and returns them.
+    @:param line: an input command, previous_coordinates: a valid target coordinate from the past
+    @:return one or multiple valid coordinates depending on arc length and position"""
     coordinates = parse_coordinates(line)
     coordinates = fill_coordinates(coordinates, previous_coordinates)
     radius = sqrt(coordinates[3] ** 2 + coordinates[4] ** 2)
@@ -120,6 +133,7 @@ def handle_arc_move(line, previous_coordinates):
 @click.option("--name", prompt="enter name", help="name of the user")
 def hello(file, name):
     click.echo(f"Hello {name}!")
+    z_safety = 25
 
     data = []
     with file as f:
@@ -137,11 +151,61 @@ def hello(file, name):
             if data:
                 previous_coordinates = data[-1]
 
+    target_filename = 'PathPreview_' + file.name
+
+    with open(target_filename, 'w') as f:
+        f.write(getfileheader(target_filename))
+        f.write(get_info_z_min(get_min_by_column(data, 2)[2]))
+        f.write(get_gcode_rapidmove([0, 0, z_safety]))
+
+        y = get_min_by_column(data, 1)
+        y[2] = z_safety
+        f.write(get_info_coordinate('Y', y))
+        x = get_min_by_column(data, 0)
+        x[2] = z_safety
+        f.write(get_info_coordinate('X', x))
+        y = get_max_by_column(data, 1)
+        y[2] = z_safety
+        f.write(get_info_coordinate('Y', y))
+        x = get_max_by_column(data, 0)
+        x[2] = z_safety
+        f.write(get_info_coordinate('X', x))
+
+        f.write('M30')
+        f.close()
+
+
+
     print(get_max_by_column(data, 0))
     print(get_min_by_column(data, 0))
     print(get_max_by_column(data, 1))
     print(get_min_by_column(data, 1))
     print(get_min_by_column(data, 2))
+
+def getfileheader(targetfilename):
+    return ('(PathPreview by Schallbert, 2023)\n'
+            '(File output is supplied without liability.)\n'
+            '(Output paths must be checked for correctness before usage.)\n\n'
+            '(Project: ' + targetfilename + ')\n\n'
+            'G90\n\n')
+
+def get_info_coordinate(axis, coordinate):
+    value = 0
+    if axis == 'X':
+        value = coordinate[0]
+    elif axis == 'Y':
+        value = coordinate[1]
+    return ('DLGMSG "PathPreview" "Go to ' + axis + ': ' + str(round(value, 3)) + '?"\n'
+          'IF [[#5398 == 1] AND [#5397 == 0]]  ; user pressed OK AND render mode is off \n'
+          '    ' + get_gcode_rapidmove(coordinate) + 'ENDIF\n\n')
+def get_gcode_rapidmove(coordinate):
+    return ('G00 X' +
+            str(round(coordinate[0], 3)) + ' Y' +
+            str(round(coordinate[1], 3)) + ' Z' +
+            str(round(coordinate[2], 3)) + '\n')
+
+def get_info_z_min(zmin):
+    return 'MSG "Maximum Z cutting depth: ' + str(round(zmin, 3)) + '"\n\n'
 
 if __name__ == "__main__":
     hello()
