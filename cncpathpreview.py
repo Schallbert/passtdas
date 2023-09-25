@@ -260,10 +260,7 @@ def convert_input_zsafety(zsafety):
     return zsafety
 
 @click.command()
-@click.argument(
-    "file",
-    type=click.File(mode="r"),
-)
+@click.argument("file", type=click.File(mode="r"))
 @click.option("-z", "--zsafety", prompt="Enter positive Z-safety height",
               help="Safety Z-height on which the CNC will move to targeted coordinates",
               default=25, show_default=True, type=float, required=False)
@@ -274,6 +271,3 @@ def path_preview(file, zsafety):
 
     data = create_dataset_from_input(file)
     generate_output_file(target_filename, data, convert_input_zsafety(zsafety))
-
-if __name__ == "__main__":
-    path_preview()
