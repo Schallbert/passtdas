@@ -54,8 +54,7 @@ def get_arc_degrees(coordinates, arc_center, radius):
     @:return arc's length in degrees"""
     if radius <= 0:
         return 0
-    # cos = dx / radius
-    cos = (coordinates[0] - arc_center[0]) / radius
+    cos = round((coordinates[0] - arc_center[0]) / radius, 3)  # cos = deltax / radius
     rad = acos(cos)
     if (coordinates[1] - arc_center[1]) < 0:
         #  negative y, count from 360° backwards
@@ -78,13 +77,12 @@ def handle_linear_move(line, previous_coordinates):
     coordinates =  fill_coordinates(parse_coordinates(line), previous_coordinates)
     return [coordinates[0], coordinates[1], coordinates[2]]
 
-def handle_arc_move(line, previous_coordinates):
+def handle_arc_move_ij(line, previous_coordinates):
     """handles an arc move command by parsing into floats, filling in 'None values', finding out movement direction,
     arc radius, span, and position. It then finds the arc's extreme values and returns them.
     @:param line: an input command, previous_coordinates: a valid target coordinate from the past
     @:return one or multiple valid coordinates depending on arc length and position"""
-    coordinates = parse_coordinates(line)
-    coordinates = fill_coordinates(coordinates, previous_coordinates)
+    coordinates = fill_coordinates(parse_coordinates(line), previous_coordinates)
     radius = sqrt(coordinates[3] ** 2 + coordinates[4] ** 2)
     arc_center = (previous_coordinates[0] + coordinates[3], previous_coordinates[1] + coordinates[4])
 
@@ -94,22 +92,18 @@ def handle_arc_move(line, previous_coordinates):
     elif line.find('G03') > -1:
         arc_start = get_arc_degrees(previous_coordinates, arc_center, radius)
         arc_end = get_arc_degrees(coordinates, arc_center, radius)
-    else:
-        return [] #  command does not fit move pattern and will not count.
 
     # min/max calculations needed later on
     xyz = [coordinates[0], coordinates[1], coordinates[2]]
     x_center = previous_coordinates[0] + coordinates[3]
     y_center = previous_coordinates[1] + coordinates[4]
-    x_plus_radius = [x_center + radius, y_center, coordinates[2]]
-    y_plus_radius = [x_center, y_center + radius, coordinates[2]]
-    x_minus_radius = [x_center - radius, y_center, coordinates[2]]
-    y_minus_radius = [x_center, y_center - radius, coordinates[2]]
+    x_plus_radius = [x_center + radius, y_center, xyz[2]]
+    y_plus_radius = [x_center, y_center + radius, xyz[2]]
+    x_minus_radius = [x_center - radius, y_center, xyz[2]]
+    y_minus_radius = [x_center, y_center - radius, xyz[2]]
     extremevalue_order = [0, y_plus_radius, x_minus_radius, y_minus_radius, x_plus_radius]
 
-    arcdiff = arc_end - arc_start
-
-    if arcdiff < 0:
+    if (arc_end - arc_start) < 0:
         # crossing the 0° line (x-axis)
         arc_end += 360
 
@@ -121,17 +115,10 @@ def handle_arc_move(line, previous_coordinates):
     result.append(xyz)
     return result
 
-
-@click.command()
-@click.argument(
-    "file",
-    type=click.File(mode="r"),
-)
-@click.option("--name", prompt="enter name", help="name of the user")
-def hello(file, name):
-    click.echo(f"Hello {name}!")
-    z_safety = 25
-
+def create_dataset_from_input(file):
+    """Reads a G-code input file and generates coordinate sets for every move command.
+    @:param file: the file that shall be read
+    @:return data: a list of coordinates"""
     data = []
     with file as f:
         lines = f.readlines()
@@ -142,40 +129,72 @@ def hello(file, name):
             if is_move(line):
                 data.append(handle_linear_move(line, previous_coordinates))
             elif is_arc(line):
-                extreme_values = handle_arc_move(line, previous_coordinates)
+                extreme_values = handle_arc_move_ij(line, previous_coordinates)
                 if lines:
                     data.extend(extreme_values)
             if data:
                 previous_coordinates = data[-1]
+    return data
 
+def generate_output_file(target_filename, data, zsafety):
+    """Creates a new G-code file and writes minimum and maximum coordinate values along with a dialog
+    for the machine user to adjust workpiece position if necessary.
+    @:param target_filename: the output filename
+    @:param data: the input coordinate set
+    @:param zsafety: the height on which the extreme coordinate values should be approached"""
+    try:
+        with open(target_filename, 'w') as f:
+            f.write(getfileheader(target_filename))
+            f.write(get_info_z_min(get_min_by_column(data, 2)[2]))
+            f.write(get_gcode_rapidmove([0, 0, zsafety]))
+
+            click.echo(f'Z safety height: ' + str(zsafety) + 'mm')
+
+            y = get_min_by_column(data, 1)
+            y[2] = zsafety
+            click.echo(f'Found Ymin: ' + str(get_gcode_rapidmove(y)), nl=False)
+            f.write(get_info_coordinate('Y', y))
+            x = get_min_by_column(data, 0)
+            x[2] = zsafety
+            click.echo(f'Found Xmin: ' + str(get_gcode_rapidmove(x)), nl= False)
+            f.write(get_info_coordinate('X', x))
+            y = get_max_by_column(data, 1)
+            y[2] = zsafety
+            click.echo(f'Found Ymax: ' + str(get_gcode_rapidmove(y)), nl=False)
+            f.write(get_info_coordinate('Y', y))
+            x = get_max_by_column(data, 0)
+            x[2] = zsafety
+            click.echo(f'Found Xmax: ' + str(get_gcode_rapidmove(x)), nl= False)
+            f.write(get_info_coordinate('X', x))
+
+            f.write('M30')
+            f.close()
+    except FileExistsError:
+        click.echo('Error: Could not create file.', err=True)
+
+@click.command()
+@click.argument(
+    "file",
+    type=click.File(mode="r"),
+)
+@click.option("--zsafety", prompt="Enter Z-safety height", help="name of the user")
+def path_preview(file, zsafety):
     target_filename = 'PathPreview_' + file.name
 
-    with open(target_filename, 'w') as f:
-        f.write(getfileheader(target_filename))
-        f.write(get_info_z_min(get_min_by_column(data, 2)[2]))
-        f.write(get_gcode_rapidmove([0, 0, z_safety]))
+    data = create_dataset_from_input(file)
+    generate_output_file(target_filename, data, convert_input_zsafety(zsafety))
 
-        y = get_min_by_column(data, 1)
-        y[2] = z_safety
-        f.write(get_info_coordinate('Y', y))
-        x = get_min_by_column(data, 0)
-        x[2] = z_safety
-        f.write(get_info_coordinate('X', x))
-        y = get_max_by_column(data, 1)
-        y[2] = z_safety
-        f.write(get_info_coordinate('Y', y))
-        x = get_max_by_column(data, 0)
-        x[2] = z_safety
-        f.write(get_info_coordinate('X', x))
 
-        f.write('M30')
-        f.close()
+def convert_input_zsafety(zsafety):
+    try:
+        zsafety = int(zsafety)
+        if zsafety <= 0:
+            raise ValueError
+    except ValueError:
+        click.echo('Error: Could not convert zsafety input to number. Defaulting to Z=25.', err=True)
+        zsafety = 25
+    return zsafety
 
-    print(get_max_by_column(data, 0))
-    print(get_min_by_column(data, 0))
-    print(get_max_by_column(data, 1))
-    print(get_min_by_column(data, 1))
-    print(get_min_by_column(data, 2))
 
 def getfileheader(targetfilename):
     return ('(PathPreview by Schallbert, 2023)\n'
@@ -203,4 +222,4 @@ def get_info_z_min(zmin):
     return 'MSG "Maximum Z cutting depth: ' + str(round(zmin, 3)) + '"\n\n'
 
 if __name__ == "__main__":
-    hello()
+    path_preview()
