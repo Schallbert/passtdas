@@ -6,6 +6,10 @@ minimum values for its movements in `X` and `Y` direction.
 These values are then written to an output file that can be run as a `Jobfile`
 by the CNC application to check whether the CNC paths are within dimensions of the workpiece.
 
+## Which problem does it solve?
+- You are unsure how to position your workpiece
+- You do not know if your milling paths fit on the workpiece
+
 ## Features
 Detects "extreme values" of any given move command including arcs that have
 multiple possible values. Supports `G92` coordinate shift and takes them into account.
@@ -28,4 +32,5 @@ Current Alpha version only supports *EdingCNC* syntax and thus uses a command ca
 ## Limitations
 Features to be added (soon):
 - Add `G02/G03 X Y R` syntax handling
-- Add support for other CNC software manufacturers (Beamicon?, EstlCAM?)
+- Add installer
+- Add scratch parameter

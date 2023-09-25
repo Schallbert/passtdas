@@ -253,12 +253,9 @@ def convert_input_zsafety(zsafety):
     """Helper method that evaluates a user input and provides a default value on error
     @:param zsafety: A positive numeric value
     @:return the validated number as integer"""
-    try:
-        zsafety = round(float(zsafety), 0)
-        if zsafety <= 0:
-            raise ValueError
-    except ValueError:
-        click.echo('Error: Could not convert zsafety input to number. Defaulting to Z=25.', err=True)
+    zsafety = round(zsafety, 0)
+    if zsafety <= 0:
+        click.echo('Error: Number invalid for safety height. Defaulting to Z=25.', err=True)
         zsafety = 25
     return zsafety
 
@@ -267,8 +264,12 @@ def convert_input_zsafety(zsafety):
     "file",
     type=click.File(mode="r"),
 )
-@click.option("--zsafety", prompt="Enter Z-safety height", help="name of the user")
+@click.option("-z", "--zsafety", prompt="Enter positive Z-safety height",
+              help="Safety Z-height on which the CNC will move to targeted coordinates",
+              default=25, show_default=True, type=float, required=False)
 def path_preview(file, zsafety):
+    """A small command-line application that takes a G-code file and traces dimensions of the cutting paths.
+    Its output is another G-code file to check if the workpiece fits the planned paths."""
     target_filename = 'PathPreview_' + file.name
 
     data = create_dataset_from_input(file)
