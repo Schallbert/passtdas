@@ -20,6 +20,9 @@ def is_arc(command):
     return False
 
 def is_coordinate_shift(command):
+    """Checks if input G-code line is a coordinate shift command.
+        @:param command: The G-code input line
+        @:return True if the line is a shift command, False if not."""
     if command:
         return command.find('G92') > -1
     return False
@@ -45,17 +48,24 @@ def parse_coordinates(line):
 
 
 def get_max_by_column(data, column_index):
-    """@:param data: the input list, column_index: the column to find the max for
+    """Returns a subset of entries that reflect a maximum value based on input column
+    @:param data: the input list
+    @:param column_index: the column to find the max for
     @:return the line that contains the maximum value of a given column"""
     return max(data, key=lambda x: x[column_index])
 
 def get_min_by_column(data, column_index):
-    """@:param data: the input list, column_index: the column to find the min for
-    @:return the line that contains the minimum value of a given column"""
+    """Returns a subset of entries that reflect a minimum value based on input column
+    @:param data: the input list
+    @:param column_index: the column to find the max for
+    @:return the line that contains the maximum value of a given column"""
     return min(data, key=lambda x: x[column_index])
 
 def get_arc_degrees(coordinates, arc_center, radius):
-    """@:param coordinates: the input vector, arc_center: coordinates, radius: arc radius
+    """Calculates an arc's span from a given point on the arc, arc's center point and a radius
+    @:param coordinates: the input vector
+    @:param arc_center: coordinates of the arc's center
+    @:param: arc radius: scalar indicating the arc's radius
     @:return arc's length in degrees"""
     if radius <= 0:
         return 0
@@ -189,6 +199,11 @@ def generate_output_file(target_filename, data, zsafety):
 
 
 def get_extreme_value(axis, data, zsafety):
+    """Finds minimum and maximum values within a set of data for a given axis.
+    @:param axis: A string defining axis and extreme value to find, e.g. `Xmin`
+    @:param data: A list of lists, each entry containing XYZ coordinates
+    @:param zsafety: The target Z height with which the preview shall run
+    @:return a string representing the coordinates of the requested extreme value"""
     if axis == "Zmin":
         zmin = str(round(get_min_by_column(data, 2)[2], 3))
         click.echo(f'Found Zmin: ' + zmin)
@@ -224,8 +239,11 @@ def path_preview(file, zsafety):
 
 
 def convert_input_zsafety(zsafety):
+    """Helper method that evaluates a user input and provides a default value on error
+    @:param zsafety: A positive numeric value
+    @:return the validated number as integer"""
     try:
-        zsafety = int(zsafety)
+        zsafety = round(zsafety, 0)
         if zsafety <= 0:
             raise ValueError
     except ValueError:
@@ -235,6 +253,9 @@ def convert_input_zsafety(zsafety):
 
 
 def getfileheader(targetfilename):
+    """Function that creates boilerplate comments for the output G-code file header.
+    @:param targetfilename: String that defines the targeted output file
+    @:return a String object"""
     return ('(CNCPathPreview by Schallbert, 2023)\n'
             '(Release: 0.8)\n'
             '(File output is supplied without liability.)\n'
@@ -243,10 +264,17 @@ def getfileheader(targetfilename):
             'G90\n\n')
 
 def get_info_coordinate(axis, coordinate):
+    """Creates G-code message and pause command along with a target rapid move to head for the next extreme value
+    @:param axis: The axis description
+    @:param coordinage: The coordinates to be written
+    @:return a String object"""
     return ('MSG "PathPreview: Hit START to go to ' + axis + ': ' + str(coordinate) + '"\n'
             + 'M00\n'
             + get_gcode_rapidmove(coordinate) + '\n')
 def get_gcode_rapidmove(coordinate):
+    """Simple helper to build a rapid move command
+    @:param coordinate: input list of coordinate strings
+    @:return a String object"""
     return ('G00 X' + coordinate[0] +
             ' Y' + coordinate[1] +
             ' Z' + coordinate[2] +'\n')
