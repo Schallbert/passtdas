@@ -271,3 +271,6 @@ def path_preview(file, zsafety):
 
     data = create_dataset_from_input(file)
     generate_output_file(target_filename, data, convert_input_zsafety(zsafety))
+
+if __name__ == "__main__":
+    path_preview()
