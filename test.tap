@@ -3,11 +3,11 @@
 (Laufzeit ca. 00:00:20 Stunden)
 
 (Benoetigte Werkzeuge:)
-(FSH032.0200.10H20)
+(1:MyTool)
 
 G90
 
-MSG "Werkzeug: #1 FSH032.0200.10H20"
+MSG "Werkzeug: #1 MyTool"
 T1 M06
 M03 S30000
 G00 Z5.0000

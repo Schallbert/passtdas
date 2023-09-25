@@ -1,5 +1,3 @@
-import math
-
 import click
 from math import sqrt, acos, pi, degrees
 
@@ -90,6 +88,18 @@ def fill_coordinates(coordinates, previous_coordinates, shift):
             coordinates[i] += shift[i]
     return coordinates
 
+def handle_coordinate_shift(line, shift):
+    """Checks how the coordinate system has been shifted. Returns the shift to be superpositioned onto move commands.
+    @:param line: The input command line
+    @:param shift: The current shift coordinates XYZ
+    @:return shift: the updated coordinate shift XYZ"""
+    coordinate_system_shift = parse_coordinates(line)
+    for i in range(0, 3):
+        if coordinate_system_shift[i]:
+            # coordinate shifted.
+            shift[i] -= coordinate_system_shift[i]
+    return shift
+
 def handle_linear_move(line, previous_coordinates, shift):
     """handles a linear move command by parsing into floats, filling in 'None values'.
     @:param line: an input command, previous_coordinates: a valid target coordinate from the past
@@ -137,19 +147,6 @@ def handle_arc_move_ij(line, previous_coordinates, shift):
     result.append(xyz)
     return result
 
-
-def handle_coordinate_shift(line, shift):
-    """Checks how the coordinate system has been shifted. Returns the shift to be superpositioned onto move commands.
-    @:param line: The input command line
-    @:param shift: The current shift coordinates XYZ
-    @:return shift: the updated coordinate shift XYZ"""
-    coordinate_system_shift = parse_coordinates(line)
-    for i in range(0, 3):
-        if coordinate_system_shift[i]:
-            # coordinate shifted.
-            shift[i] -= coordinate_system_shift[i]
-    return shift
-
 def create_dataset_from_input(file):
     """Reads a G-code input file and generates coordinate sets for every move command.
     @:param file: the file that shall be read
@@ -183,14 +180,14 @@ def generate_output_file(target_filename, data, zsafety):
     @:param zsafety: the height on which the extreme coordinate values should be approached"""
     try:
         with open(target_filename, 'w') as f:
-            f.write(getfileheader(target_filename))
+            f.write(get_file_header(target_filename))
             f.write(get_extreme_value('Zmin', data, zsafety))  # Print Zmin
-            f.write(get_gcode_rapidmove(['0', '0', str(zsafety)]))  # Go to X0Y0
+            f.write(get_rapidmove(['0', '0', str(zsafety)]))  # Go to X0Y0
 
             targets = ['Ymin', 'Xmin', 'Ymax', 'Xmax']
             for text in targets:
                 value = get_extreme_value(text, data, zsafety)
-                f.write(get_info_coordinate(text, value))
+                f.write(get_coordinate_strings(text, value))
 
             f.write('M30')
             f.close()
@@ -224,6 +221,46 @@ def get_extreme_value(axis, data, zsafety):
     click.echo(f'Found ' + axis + ' at coordinates ' + ' | '.join(stringresult), nl=True)
     return stringresult
 
+def get_file_header(targetfilename):
+    """Function that creates boilerplate comments for the output G-code file header.
+    @:param targetfilename: String that defines the targeted output file
+    @:return a String object"""
+    return ('(CNCPathPreview by Schallbert, 2023)\n'
+            '(Release: 0.8)\n'
+            '(File output is supplied without liability.)\n'
+            '(Output paths must be checked for correctness before usage.)\n\n'
+            '(Project: ' + targetfilename + ')\n\n'
+            'G90\n\n')
+
+def get_coordinate_strings(axis, coordinate):
+    """Creates G-code message and pause command along with a target rapid move to head for the next extreme value
+    @:param axis: The axis description
+    @:param coordinage: The coordinates to be written
+    @:return a String object"""
+    return ('MSG "PathPreview: Hit START to go to ' + axis + ': ' + str(coordinate) + '"\n'
+            + 'M00\n'
+            + get_rapidmove(coordinate) + '\n')
+
+def get_rapidmove(coordinate):
+    """Simple helper to build a rapid move command
+    @:param coordinate: input list of coordinate strings
+    @:return a String object"""
+    return ('G00 X' + coordinate[0] +
+            ' Y' + coordinate[1] +
+            ' Z' + coordinate[2] +'\n')
+
+def convert_input_zsafety(zsafety):
+    """Helper method that evaluates a user input and provides a default value on error
+    @:param zsafety: A positive numeric value
+    @:return the validated number as integer"""
+    try:
+        zsafety = round(float(zsafety), 0)
+        if zsafety <= 0:
+            raise ValueError
+    except ValueError:
+        click.echo('Error: Could not convert zsafety input to number. Defaulting to Z=25.', err=True)
+        zsafety = 25
+    return zsafety
 
 @click.command()
 @click.argument(
@@ -236,48 +273,6 @@ def path_preview(file, zsafety):
 
     data = create_dataset_from_input(file)
     generate_output_file(target_filename, data, convert_input_zsafety(zsafety))
-
-
-def convert_input_zsafety(zsafety):
-    """Helper method that evaluates a user input and provides a default value on error
-    @:param zsafety: A positive numeric value
-    @:return the validated number as integer"""
-    try:
-        zsafety = round(zsafety, 0)
-        if zsafety <= 0:
-            raise ValueError
-    except ValueError:
-        click.echo('Error: Could not convert zsafety input to number. Defaulting to Z=25.', err=True)
-        zsafety = 25
-    return zsafety
-
-
-def getfileheader(targetfilename):
-    """Function that creates boilerplate comments for the output G-code file header.
-    @:param targetfilename: String that defines the targeted output file
-    @:return a String object"""
-    return ('(CNCPathPreview by Schallbert, 2023)\n'
-            '(Release: 0.8)\n'
-            '(File output is supplied without liability.)\n'
-            '(Output paths must be checked for correctness before usage.)\n\n'
-            '(Project: ' + targetfilename + ')\n\n'
-            'G90\n\n')
-
-def get_info_coordinate(axis, coordinate):
-    """Creates G-code message and pause command along with a target rapid move to head for the next extreme value
-    @:param axis: The axis description
-    @:param coordinage: The coordinates to be written
-    @:return a String object"""
-    return ('MSG "PathPreview: Hit START to go to ' + axis + ': ' + str(coordinate) + '"\n'
-            + 'M00\n'
-            + get_gcode_rapidmove(coordinate) + '\n')
-def get_gcode_rapidmove(coordinate):
-    """Simple helper to build a rapid move command
-    @:param coordinate: input list of coordinate strings
-    @:return a String object"""
-    return ('G00 X' + coordinate[0] +
-            ' Y' + coordinate[1] +
-            ' Z' + coordinate[2] +'\n')
 
 if __name__ == "__main__":
     path_preview()
