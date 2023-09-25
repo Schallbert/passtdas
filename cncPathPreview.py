@@ -174,32 +174,41 @@ def generate_output_file(target_filename, data, zsafety):
     try:
         with open(target_filename, 'w') as f:
             f.write(getfileheader(target_filename))
-            f.write(get_info_z_min(get_min_by_column(data, 2)[2]))
-            f.write(get_gcode_rapidmove([0, 0, zsafety]))
+            f.write(get_extreme_value('Zmin', data, zsafety))  # Print Zmin
+            f.write(get_gcode_rapidmove(['0', '0', str(zsafety)]))  # Go to X0Y0
 
-            click.echo(f'Z safety height: ' + str(zsafety) + 'mm')
-
-            y = get_min_by_column(data, 1)
-            y[2] = zsafety
-            click.echo(f'Found Ymin: ' + str(get_gcode_rapidmove(y)), nl=False)
-            f.write(get_info_coordinate('Y', y))
-            x = get_min_by_column(data, 0)
-            x[2] = zsafety
-            click.echo(f'Found Xmin: ' + str(get_gcode_rapidmove(x)), nl= False)
-            f.write(get_info_coordinate('X', x))
-            y = get_max_by_column(data, 1)
-            y[2] = zsafety
-            click.echo(f'Found Ymax: ' + str(get_gcode_rapidmove(y)), nl=False)
-            f.write(get_info_coordinate('Y', y))
-            x = get_max_by_column(data, 0)
-            x[2] = zsafety
-            click.echo(f'Found Xmax: ' + str(get_gcode_rapidmove(x)), nl= False)
-            f.write(get_info_coordinate('X', x))
+            targets = ['Ymin', 'Xmin', 'Ymax', 'Xmax']
+            for text in targets:
+                value = get_extreme_value(text, data, zsafety)
+                f.write(get_info_coordinate(text, value))
 
             f.write('M30')
             f.close()
     except FileExistsError:
         click.echo('Error: Could not create file.', err=True)
+
+
+def get_extreme_value(axis, data, zsafety):
+    if axis == "Zmin":
+        zmin = str(round(get_min_by_column(data, 2)[2], 3))
+        click.echo(f'Found Zmin: ' + zmin)
+        return 'MSG "Zmin of this job: ' + zmin + '"\n'
+
+    result = [0, 0, 0]
+    if axis == "Ymin":
+        result = get_min_by_column(data, 1)
+    elif axis == "Xmin":
+        result = get_min_by_column(data, 0)
+    elif axis == "Ymax":
+        result = get_max_by_column(data, 1)
+    elif axis == "Xmax":
+        result = get_max_by_column(data, 0)
+    result[2] = zsafety
+    stringresult = [str(round(result[0], 3)), str(round(result[1], 3)), str(round(result[2], 3))]
+
+    click.echo(f'Found ' + axis + ' at coordinates ' + ' | '.join(stringresult), nl=True)
+    return stringresult
+
 
 @click.command()
 @click.argument(
@@ -234,25 +243,13 @@ def getfileheader(targetfilename):
             'G90\n\n')
 
 def get_info_coordinate(axis, coordinate):
-    value = 0
-    if axis == 'X':
-        value = coordinate[0]
-    elif axis == 'Y':
-        value = coordinate[1]
-    return ('DLGMSG "PathPreview, go to ' + axis + ': ' + str(round(value, 3)) + '?"\n'
-          'IF [[#5398 == 1] AND [#5397 == 0]]\n'
-          '    ' + get_gcode_rapidmove(coordinate) + 'ENDIF\n\n')
+    return ('MSG "PathPreview: Hit START to go to ' + axis + ': ' + str(coordinate) + '"\n'
+            + 'M00\n'
+            + get_gcode_rapidmove(coordinate) + '\n')
 def get_gcode_rapidmove(coordinate):
-    return ('G00 X' +
-            str(round(coordinate[0], 3)) + ' Y' +
-            str(round(coordinate[1], 3)) + ' Z' +
-            str(round(coordinate[2], 3)) + '\n')
-
-def get_info_z_min(zmin):
-    zmin = str(round(zmin, 3))
-    click.echo(f'Maximum Z depth of cut: ' + zmin + 'mm')
-    return 'MSG "Maximum Z cutting depth: ' + zmin + 'mm"\n\n'
-
+    return ('G00 X' + coordinate[0] +
+            ' Y' + coordinate[1] +
+            ' Z' + coordinate[2] +'\n')
 
 if __name__ == "__main__":
     path_preview()
