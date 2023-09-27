@@ -6,7 +6,8 @@ def is_move(command):
     @:param line: The G-code input line
     @:return True if the line is a linear move, False if not."""
     if command:
-        return command.find('G00') > -1 or command.find('G01') > -1
+        return (command.find('G00') > -1 or command.find('G0 ') or
+                command.find('G01') > -1) or command.find('G1 ')
     return False
 
 def is_arc(command):
@@ -14,7 +15,8 @@ def is_arc(command):
     @:param command: The G-code input line
     @:return True if the line is an arc move, False if not."""
     if command:
-        return (command.find('G02') > -1) or (command.find('G03') > -1)
+        return ((command.find('G02') > -1) or (command.find('G03') > -1) or
+                (command.find('G2 ') > -1) or (command.find('G3 ') > -1))
     return False
 
 def is_coordinate_shift(command):
@@ -116,10 +118,10 @@ def handle_arc_move_ij(line, previous_coordinates, shift):
     radius = sqrt(coordinates[3] ** 2 + coordinates[4] ** 2)
     arc_center = (previous_coordinates[0] + coordinates[3], previous_coordinates[1] + coordinates[4])
 
-    if line.find('G02') > -1:
+    if line.find('G02') > -1 or line.find('G2 ') > -1:
         arc_start = get_arc_degrees(coordinates, arc_center, radius)
         arc_end = get_arc_degrees(previous_coordinates, arc_center, radius)
-    elif line.find('G03') > -1:
+    elif line.find('G03') > -1 or line.find('G3 ') > -1:
         arc_start = get_arc_degrees(previous_coordinates, arc_center, radius)
         arc_end = get_arc_degrees(coordinates, arc_center, radius)
     else:
