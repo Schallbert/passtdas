@@ -1,23 +1,27 @@
+from enum import Enum
 import click
 from math import sqrt, acos, pi, degrees
 
-def is_move(command):
-    """Checks if input G-code line is a linear move (rapid or with feed rate) command.
-    @:param line: The G-code input line
-    @:return True if the line is a linear move, False if not."""
-    if command:
-        return (command.find('G00') > -1 or command.find('G0 ') or
-                command.find('G01') > -1) or command.find('G1 ')
-    return False
+class MoveType(Enum):
+    NONE = 0
+    LINEAR = 1
+    ARC_CLOCKWISE = 2
+    ARC_ANTICLOCK = 3
 
-def is_arc(command):
-    """Checks if input G-code line is a circular arc (clockwise or counter-clockwise) command.
+
+def is_move(command):
+    """Checks if input G-code line is a move (linear or arc) command.
     @:param command: The G-code input line
-    @:return True if the line is an arc move, False if not."""
+    @:return A MoveType Enum according to the move type.."""
     if command:
-        return ((command.find('G02') > -1) or (command.find('G03') > -1) or
-                (command.find('G2 ') > -1) or (command.find('G3 ') > -1))
-    return False
+        if (command.find('G00') > -1 or (command.find('G0 ') > -1) or
+            command.find('G01') > -1) or (command.find('G1 ') > -1):
+                return MoveType.LINEAR
+        if (command.find('G02') > -1) or (command.find('G2 ') > -1):
+            return MoveType.ARC_CLOCKWISE
+        if (command.find('G03') > -1) or (command.find('G3 ') > -1):
+            return MoveType.ARC_ANTICLOCK
+    return MoveType.NONE
 
 def is_coordinate_shift(command):
     """Checks if input G-code line is a coordinate shift command.
@@ -102,30 +106,26 @@ def handle_coordinate_shift(line, shift):
             shift[i] -= coordinate_system_shift[i]
     return shift
 
-def handle_linear_move(line, previous_coordinates, shift):
+def handle_linear_move(coordinates):
     """handles a linear move command by parsing into floats, filling in 'None values'.
     @:param line: an input command, previous_coordinates: a valid target coordinate from the past
     @:return a valid coordinate"""
-    coordinates =  fill_coordinates(parse_coordinates(line), previous_coordinates, shift)
     return [coordinates[0], coordinates[1], coordinates[2]]
 
-def handle_arc_move_ij(line, previous_coordinates, shift):
+def handle_arc_move_ij(coordinates, previous_coordinates, move_type):
     """handles an arc move command by parsing into floats, filling in 'None values', finding out movement direction,
     arc radius, span, and position. It then finds the arc's extreme values and returns them.
     @:param line: an input command, previous_coordinates: a valid target coordinate from the past
     @:return one or multiple valid coordinates depending on arc length and position or empty list in case of an error."""
-    coordinates = fill_coordinates(parse_coordinates(line), previous_coordinates, shift)
     radius = sqrt(coordinates[3] ** 2 + coordinates[4] ** 2)
     arc_center = (previous_coordinates[0] + coordinates[3], previous_coordinates[1] + coordinates[4])
 
-    if line.find('G02') > -1 or line.find('G2 ') > -1:
+    if move_type == MoveType.ARC_CLOCKWISE:
         arc_start = get_arc_degrees(coordinates, arc_center, radius)
         arc_end = get_arc_degrees(previous_coordinates, arc_center, radius)
-    elif line.find('G03') > -1 or line.find('G3 ') > -1:
+    else:
         arc_start = get_arc_degrees(previous_coordinates, arc_center, radius)
         arc_end = get_arc_degrees(coordinates, arc_center, radius)
-    else:
-        return []
 
     # min/max calculations needed later on
     xyz = [coordinates[0], coordinates[1], coordinates[2]]
@@ -161,15 +161,19 @@ def create_dataset_from_input(file):
         shift = [0, 0, 0]
         for line in lines:
             line = line.strip()
-            if is_move(line):
-                data.append(handle_linear_move(line, previous_coordinates, shift))
-            elif is_arc(line):
-                extreme_values = handle_arc_move_ij(line, previous_coordinates, shift)
+            move_type = is_move(line)
+            if move_type == move_type.NONE:
+                if is_coordinate_shift(line):
+                    shift = handle_coordinate_shift(line, shift)
+                    click.echo(f'Found coordinate shift: X' + str(shift[0]) + ', Y' + str(shift[1]) + ' Z' + str(shift[2]))
+                continue
+            coordinates = fill_coordinates(parse_coordinates(line), previous_coordinates, shift)
+            if move_type == MoveType.LINEAR:
+                data.append(handle_linear_move(coordinates))
+            else:
+                extreme_values = handle_arc_move_ij(coordinates, previous_coordinates, move_type)
                 if lines:
                     data.extend(extreme_values)
-            elif is_coordinate_shift(line):
-                shift = handle_coordinate_shift(line, shift)
-                click.echo(f'Found coordinate shift: X' + str(shift[0]) + ', Y' + str(shift[1]) + ' Z' + str(shift[2]))
             if data:
                 previous_coordinates = data[-1]
     return data
