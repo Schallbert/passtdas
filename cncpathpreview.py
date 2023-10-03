@@ -1,6 +1,6 @@
 from enum import Enum
 import click
-from math import sqrt, acos, pi, degrees
+from math import sqrt, acos, cos, atan, pi, degrees
 
 class MoveType(Enum):
     NONE = 0
@@ -76,6 +76,7 @@ def get_arc_degrees(coordinates, arc_center, radius):
     if radius <= 0:
         return 0
     cos = round((coordinates[0] - arc_center[0]) / radius, 3)  # cos = deltax / radius
+    print(cos)
     rad = acos(cos)
     if (coordinates[1] - arc_center[1]) < 0:
         #  negative y, count from 360° backwards
@@ -122,13 +123,14 @@ def handle_arc_move_r(coordinates, previous_coordinates, move_type):
     p1p2_distance_y = coordinates[1] - previous_coordinates[1]
     p1p2_distance = sqrt(p1p2_distance_x ** 2 + p1p2_distance_y ** 2)
 
-    if p1p2_distance_x == 0:
+    if p1p2_distance == 0:
         return [None, None, None]
-    p1p2_90degslope = -1 / (p1p2_midpoint_y / p1p2_distance_x)
-    arc_height = sqrt(coordinates[5] - p1p2_distance / 2)
+    p1p2_90degslope = -(p1p2_distance_x / p1p2_distance_y)
+    angle = atan(p1p2_90degslope)
+    arc_height = coordinates[5] - sqrt(coordinates[5] ** 2 - ((p1p2_distance / 2) ** 2))
 
-    center_x = p1p2_midpoint_x - arc_height / sqrt(1 + p1p2_90degslope ** 2)
-    if move_type == MoveType.ARC_CLOCKWISE:
+    center_x = p1p2_midpoint_x + cos(angle) * (coordinates[5] - arc_height)
+    if move_type == MoveType.ARC_ANTICLOCK:
         center_y = p1p2_midpoint_y - p1p2_90degslope * (center_x - p1p2_midpoint_x)
         arc_start = get_arc_degrees(coordinates, [center_x, center_y], coordinates[5])
         arc_end = get_arc_degrees(previous_coordinates, [center_x, center_y], coordinates[5])
