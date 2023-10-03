@@ -36,7 +36,7 @@ def parse_coordinates(line):
     @:param line: a move command
     @:return a float value set."""
     values = line.split(' ')
-    coordinate = [None, None, None, None, None]
+    coordinate = [None, None, None, None, None, None]
     for value in values:
         if value.find('X') > -1:
             coordinate[0] = float(value.strip('X '))
@@ -48,6 +48,8 @@ def parse_coordinates(line):
             coordinate[3] = float(value.strip('I '))
         if value.find('J') > -1:
             coordinate[4] = float(value.strip('J '))
+        if value.find('R') > -1:
+            coordinate[5] = float(value.strip('R '))
     return coordinate
 
 
@@ -88,6 +90,7 @@ def fill_coordinates(coordinates, previous_coordinates, shift):
     @:param shift: the shifted coordinate system
     @:return the filled coordinate vector"""
     for i in range(0, 3):
+        #  Only fill XYZ (0-2)
         if coordinates[i] is None:
             coordinates[i] = previous_coordinates[i]
         else:
@@ -112,10 +115,37 @@ def handle_linear_move(coordinates):
     @:return a valid coordinate"""
     return [coordinates[0], coordinates[1], coordinates[2]]
 
+def handle_arc_move_r(coordinates, previous_coordinates, move_type):
+    p1p2_midpoint_x = (coordinates[0] + previous_coordinates[0]) / 2
+    p1p2_midpoint_y = (coordinates[1] + previous_coordinates[1]) / 2
+    p1p2_distance_x = coordinates[0] - previous_coordinates[0]
+    p1p2_distance_y = coordinates[1] - previous_coordinates[1]
+    p1p2_distance = sqrt(p1p2_distance_x ** 2 + p1p2_distance_y ** 2)
+
+    if p1p2_distance_x == 0:
+        return [None, None, None]
+    p1p2_90degslope = -1 / (p1p2_midpoint_y / p1p2_distance_x)
+    arc_height = sqrt(coordinates[5] - p1p2_distance / 2)
+
+    center_x = p1p2_midpoint_x - arc_height / sqrt(1 + p1p2_90degslope ** 2)
+    if move_type == MoveType.ARC_CLOCKWISE:
+        center_y = p1p2_midpoint_y - p1p2_90degslope * (center_x - p1p2_midpoint_x)
+        arc_start = get_arc_degrees(coordinates, [center_x, center_y], coordinates[5])
+        arc_end = get_arc_degrees(previous_coordinates, [center_x, center_y], coordinates[5])
+    else:
+        center_y = p1p2_midpoint_y + p1p2_90degslope * (center_x - p1p2_midpoint_x)
+        arc_start = get_arc_degrees(previous_coordinates, [center_x, center_y], coordinates[5])
+        arc_end = get_arc_degrees(coordinates, [center_x, center_y], coordinates[5])
+
+    return get_extremes_from_arc(arc_end, arc_start, coordinates, [center_x, center_y])
+
+
 def handle_arc_move_ij(coordinates, previous_coordinates, move_type):
-    """handles an arc move command by parsing into floats, filling in 'None values', finding out movement direction,
-    arc radius, span, and position. It then finds the arc's extreme values and returns them.
-    @:param line: an input command, previous_coordinates: a valid target coordinate from the past
+    """handles an arc move command by finding out arc radius, span, and position.
+    It then finds the arc's extreme values and returns them.
+    @:param coordinates: the target move coordinates
+    @:param previous_coordinates: a valid target coordinate from the past
+    @:param move_type: An enum indicating arc direction
     @:return one or multiple valid coordinates depending on arc length and position or empty list in case of an error."""
     radius = sqrt(coordinates[3] ** 2 + coordinates[4] ** 2)
     arc_center = (previous_coordinates[0] + coordinates[3], previous_coordinates[1] + coordinates[4])
@@ -127,27 +157,29 @@ def handle_arc_move_ij(coordinates, previous_coordinates, move_type):
         arc_start = get_arc_degrees(previous_coordinates, arc_center, radius)
         arc_end = get_arc_degrees(coordinates, arc_center, radius)
 
+    coordinates[5] = radius
+    return get_extremes_from_arc(arc_end, arc_start, coordinates, arc_center)
+
+
+def get_extremes_from_arc(arc_end, arc_start, coordinates, arc_center):
     # min/max calculations needed later on
     xyz = [coordinates[0], coordinates[1], coordinates[2]]
-    x_center = previous_coordinates[0] + coordinates[3]
-    y_center = previous_coordinates[1] + coordinates[4]
-    x_plus_radius = [x_center + radius, y_center, xyz[2]]
-    y_plus_radius = [x_center, y_center + radius, xyz[2]]
-    x_minus_radius = [x_center - radius, y_center, xyz[2]]
-    y_minus_radius = [x_center, y_center - radius, xyz[2]]
+    radius = coordinates[5]
+    x_plus_radius = [arc_center[0] + radius, arc_center[1], xyz[2]]
+    y_plus_radius = [arc_center[0], arc_center[1] + radius, xyz[2]]
+    x_minus_radius = [arc_center[0] - radius, arc_center[1], xyz[2]]
+    y_minus_radius = [arc_center[0], arc_center[1] - radius, xyz[2]]
     extremevalue_order = [0, y_plus_radius, x_minus_radius, y_minus_radius, x_plus_radius]
-
     if (arc_end - arc_start) < 0:
         # crossing the 0° line (x-axis)
         arc_end += 360
-
     result = []
-    for crossing_angle in range (90, 361, 90):
+    for crossing_angle in range(90, 361, 90):
         if crossing_angle in range(int(arc_start), int(arc_end)):
-            result.append(extremevalue_order[int(crossing_angle/90)])
-
+            result.append(extremevalue_order[int(crossing_angle / 90)])
     result.append(xyz)
     return result
+
 
 def create_dataset_from_input(file):
     """Reads a G-code input file and generates coordinate sets for every move command.
@@ -171,7 +203,12 @@ def create_dataset_from_input(file):
             if move_type == MoveType.LINEAR:
                 data.append(handle_linear_move(coordinates))
             else:
-                extreme_values = handle_arc_move_ij(coordinates, previous_coordinates, move_type)
+                if coordinates[5]:
+                    #  arc move with given radius
+                    extreme_values = handle_arc_move_r(coordinates, previous_coordinates, move_type)
+                else:
+                    #  arc move with given arc center coordinates
+                    extreme_values = handle_arc_move_ij(coordinates, previous_coordinates, move_type)
                 if lines:
                     data.extend(extreme_values)
             if data:
