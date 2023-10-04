@@ -52,6 +52,20 @@ def parse_coordinates(line):
             coordinate[5] = float(value.strip('R '))
     return coordinate
 
+def fill_coordinates(coordinates, previous_coordinates, shift):
+    """helper that removes 'None' values from a line by filling with last known coordinate values and applies
+    coordinate shifts
+    @:param coordinates: the current target vector
+    @:param previous_coordinates: valid target vector from the past
+    @:param shift: the shifted coordinate system
+    @:return the filled coordinate vector"""
+    for i in range(0, 3):
+        #  Only fill XYZ (0-2)
+        if coordinates[i] is None:
+            coordinates[i] = previous_coordinates[i]
+        else:
+            coordinates[i] += shift[i]
+    return coordinates
 
 def get_max_by_column(data, column_index):
     """Returns a subset of entries that reflect a maximum value based on input column
@@ -81,21 +95,6 @@ def get_arc_degrees(coordinates, arc_center, radius):
         #  negative y, count from 360° backwards
         rad = 2*pi - rad
     return round(degrees(rad), 0)
-
-def fill_coordinates(coordinates, previous_coordinates, shift):
-    """helper that removes 'None' values from a line by filling with last known coordinate values and applies
-    coordinate shifts
-    @:param coordinates: the current target vector
-    @:param previous_coordinates: valid target vector from the past
-    @:param shift: the shifted coordinate system
-    @:return the filled coordinate vector"""
-    for i in range(0, 3):
-        #  Only fill XYZ (0-2)
-        if coordinates[i] is None:
-            coordinates[i] = previous_coordinates[i]
-        else:
-            coordinates[i] += shift[i]
-    return coordinates
 
 def handle_coordinate_shift(line, shift):
     """Checks how the coordinate system has been shifted. Returns the shift to be superpositioned onto move commands.

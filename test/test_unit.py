@@ -1,7 +1,7 @@
 import unittest
 import cncpathpreview as cnc
 
-class TestIsMove(unittest.TestCase):
+class TestParsers(unittest.TestCase):
     def setUp(self):
         pass
 
@@ -41,6 +41,46 @@ class TestIsMove(unittest.TestCase):
         line = 'G10 L20 X100 Y0'
         self.assertEqual(cnc.MoveType.NONE, cnc.is_move(line))
 
+    def test_iscoordinateshift_G01_returns_false(self):
+        line = 'G01 L20 X100 Y0'
+        self.assertEqual(False, cnc.is_coordinate_shift(line))
 
+    def test_iscoordinateshift_G92_returns_false(self):
+        line = 'G92 X100 Y0'
+        self.assertEqual(True, cnc.is_coordinate_shift(line))
+
+    def test_parsecoordinates_nonegiven_returns_fieldofnones(self):
+        line = 'M05'
+        self.assertEqual([None, None, None, None, None, None], cnc.parse_coordinates(line))
+
+    def test_parsecoordinates_linearmove_returns_xyz(self):
+        line = 'G00 X10 Y20 Z30'
+        self.assertEqual([10, 20, 30, None, None, None], cnc.parse_coordinates(line))
+
+    def test_parsecoordinates_arcij_returns_xyzij(self):
+        line = 'G02 X10 Y20 Z30 I15 J25'
+        self.assertEqual([10, 20, 30, 15, 25, None], cnc.parse_coordinates(line))
+
+    def test_parsecoordinates_arc_returns_xyz(self):
+        line = 'G03 X10 Y20 Z30 R35'
+        self.assertEqual([10, 20, 30, None, None, 35], cnc.parse_coordinates(line))
+
+    def test_fillcoordinates_nonegiven_fillsprevious(self):
+        prev = [10, 20, 30]
+        coor = [None, None, None]
+        shift = [0, 0, 0]
+        self.assertEqual(prev, cnc.fill_coordinates(coor, prev, shift))
+
+    def test_fillcoordinates_given_notoverwritten(self):
+        prev = [10, 20, 30]
+        coor = [5, 15, 25]
+        shift = [0, 0, 0]
+        self.assertEqual(coor, cnc.fill_coordinates(coor, prev, shift))
+
+    def test_fillcoordinates_givenandshifted_updated(self):
+        prev = [10, 20, 30]
+        coor = [5, 15, 25]
+        shift = [10, 10, 10]
+        self.assertEqual([15, 25, 35], cnc.fill_coordinates(coor, prev, shift))
 
 
