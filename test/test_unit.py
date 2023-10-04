@@ -83,4 +83,75 @@ class TestParsers(unittest.TestCase):
         shift = [10, 10, 10]
         self.assertEqual([15, 25, 35], cnc.fill_coordinates(coor, prev, shift))
 
+class TestAlgorithms(unittest.TestCase):
+
+    def setUp(self):
+        pass
+
+    def test_getmax_returnsmax(self):
+        minlist = [10, 20, 30]
+        maxlist = [15, 25, 35]
+        self.assertEqual(maxlist, cnc.get_max_by_column([minlist, maxlist], 1))
+
+    def test_getmax_returnsmaxwithinmin(self):
+        minlist = [10, 20, 30]
+        maxlist = [0, 0, 35]
+        self.assertEqual(maxlist, cnc.get_max_by_column([minlist, maxlist], 2))
+
+    def test_getmin_returnsmin(self):
+        minlist = [10, 20, 30]
+        maxlist = [15, 25, 35]
+        self.assertEqual(minlist, cnc.get_min_by_column([minlist, maxlist], 1))
+
+    def test_getmin_returnsminwithinmax(self):
+        minlist = [100, 200, 30]
+        maxlist = [15, 25, 35]
+        self.assertEqual(minlist, cnc.get_min_by_column([minlist, maxlist], 2))
+
+    def test_getarcdegrees_inputradiusis0_returns0(self):
+        coordinates = [0, 0, 0, 0, 0, 0]
+        self.assertEqual(0, cnc.get_arc_degrees(coordinates))
+
+    def test_getardegrees_inputcreatescosoutofrange_raisesvalueerror(self):
+        coordinates = [10, 0, 0, 1, 0, 1]
+        with self.assertRaises(ValueError): (
+            cnc.get_arc_degrees(coordinates))
+
+    def test_getarcdegrees_inputspanis0_returns0(self):
+        coordinates = [5.66, 0, 0, 0, 0, 5.66]
+        self.assertEqual(0, round(cnc.get_arc_degrees(coordinates), 0))
+
+    def test_getarcdegrees_inputspanis45_returns45(self):
+        coordinates = [4, 4, 0, 0, 0, 5.66]
+        self.assertEqual(45, round(cnc.get_arc_degrees(coordinates), 0))
+
+    def test_getarcdegrees_inputspanis135_returns135(self):
+        coordinates = [-4, 4, 0, 0, 0, 5.66]
+        self.assertEqual(135, round(cnc.get_arc_degrees(coordinates), 0))
+
+    def test_getarcdegrees_inputspanis90_returns90(self):
+        coordinates = [0, 5.66, 0, 0, 0, 5.66]
+        self.assertEqual(90, round(cnc.get_arc_degrees(coordinates), 0))
+
+    def test_getarcdegrees_inputspanis225_returns225(self):
+        coordinates = [-4, -4, 0, 0, 0, 5.66]
+        self.assertEqual(225, round(cnc.get_arc_degrees(coordinates), 0))
+
+    def test_getarcdegrees_inputspanis315_returns315(self):
+        coordinates = [4, -4, 0, 0, 0, 5.66]
+        self.assertEqual(315, round(cnc.get_arc_degrees(coordinates), 0))
+
+    def test_getextremesfromarc_arccrossesno90degpole_returnstargetxyz(self):
+        coordinates = [4, 4, 0, 0, 0, 5.66]
+        self.assertEqual([[4, 4, 0]], cnc.get_extremes_from_arc(45, 35, coordinates))
+
+    def test_getextremesfromarc_arccrossesone90degpole_returns90pole(self):
+        coordinates = [4, 4, 0, 0, 0, 5.66]
+        self.assertEqual([[0, 5.66, 0], [4, 4, 0]], cnc.get_extremes_from_arc(135, 35, coordinates))
+
+    def test_getextremesfromarc_arccrossesthree90degpoles_returnsthreepoles(self):
+        coordinates = [4, -4, 0, 0, 0, 5.66]
+        self.assertEqual([[0, 5.66, 0], [-5.66, 0, 0], [0, -5.66, 0], [4, -4, 0]],
+                         cnc.get_extremes_from_arc(300, 35, coordinates))
+
 
