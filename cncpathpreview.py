@@ -81,20 +81,48 @@ def get_min_by_column(data, column_index):
     @:return the line that contains the maximum value of a given column"""
     return min(data, key=lambda x: x[column_index])
 
-def get_arc_degrees(coordinates, arc_center, radius):
+def get_arc_degrees(coordinates):
     """Calculates an arc's span from a given point on the arc, arc's center point and a radius
     @:param coordinates: the input vector
     @:param arc_center: coordinates of the arc's center
     @:param: arc radius: scalar indicating the arc's radius
     @:return arc's length in degrees"""
-    if radius <= 0:
+    if coordinates[5] <= 0:
         return 0
-    cosinus = round((coordinates[0] - arc_center[0]) / radius, 3)  # cos = deltax / radius
-    rad = acos(cosinus)
-    if (coordinates[1] - arc_center[1]) < 0:
+    cosinus = round((coordinates[0] - coordinates[3]) / coordinates[5], 3)  # cos = deltax / radius
+    try:
+        rad = acos(cosinus)
+    except ValueError:
+        click.echo('Error: Value out of range for acos calculation (+-pi). Value: ' + str(cosinus), err=True)
+        raise ValueError
+    if (coordinates[1] - coordinates[4]) < 0:
         #  negative y, count from 360° backwards
         rad = 2*pi - rad
     return round(degrees(rad), 0)
+
+def get_extremes_from_arc(arc_end, arc_start, coordinates):
+    """Calculator function that returns minimum one but up to five possible extreme points from an arc definition.
+    @:param arc_end: angle of the end of an arc
+    @:param arc_start: angle of the start of an arc
+    @:param coordinates : target xyz position, arc_center xy, arc radius
+    @:return a list of xyz coordinates with arc's extreme values"""
+    # min/max calculations needed later on
+    xyz = [coordinates[0], coordinates[1], coordinates[2]]
+    radius = coordinates[5]
+    x_plus_radius = [coordinates[3] + radius, coordinates[4], xyz[2]]
+    y_plus_radius = [coordinates[3], coordinates[4] + radius, xyz[2]]
+    x_minus_radius = [coordinates[3] - radius, coordinates[4], xyz[2]]
+    y_minus_radius = [coordinates[3], coordinates[4] - radius, xyz[2]]
+    extremevalue_order = [0, y_plus_radius, x_minus_radius, y_minus_radius, x_plus_radius]
+    if (arc_end - arc_start) < 0:
+        # crossing the 0° line (x-axis)
+        arc_end += 360
+    result = []
+    for crossing_angle in range(90, 361, 90):
+        if crossing_angle in range(int(arc_start), int(arc_end)):
+            result.append(extremevalue_order[int(crossing_angle / 90)])
+    result.append(xyz)
+    return result
 
 def handle_coordinate_shift(line, shift):
     """Checks how the coordinate system has been shifted. Returns the shift to be superpositioned onto move commands.
@@ -153,38 +181,24 @@ def handle_arc_move_ij(coordinates, previous_coordinates, move_type):
     @:param previous_coordinates: a valid target coordinate from the past
     @:param move_type: An enum indicating arc direction
     @:return one or multiple valid coordinates depending on arc length and position or empty list in case of an error."""
-    radius = sqrt(coordinates[3] ** 2 + coordinates[4] ** 2)
-    arc_center = (previous_coordinates[0] + coordinates[3], previous_coordinates[1] + coordinates[4])
+    coordinates[5] = sqrt(coordinates[3] ** 2 + coordinates[4] ** 2)
+    #  calculate arc_center from ij_offset and previous XY coordinates
+    coordinates[3] = previous_coordinates[0] + coordinates[3]
+    coordinates[4] = previous_coordinates[1] + coordinates[4]
+    otherarcpoint = coordinates
+    print(otherarcpoint)
+    otherarcpoint[0] = previous_coordinates[0]
+    otherarcpoint[1] = previous_coordinates[1]
+    otherarcpoint[2] = previous_coordinates[2]
 
     if move_type == MoveType.ARC_CLOCKWISE:
-        arc_start = get_arc_degrees(coordinates, arc_center, radius)
-        arc_end = get_arc_degrees(previous_coordinates, arc_center, radius)
+        arc_start = get_arc_degrees(coordinates)
+        arc_end = get_arc_degrees(otherarcpoint)
     else:
-        arc_start = get_arc_degrees(previous_coordinates, arc_center, radius)
-        arc_end = get_arc_degrees(coordinates, arc_center, radius)
+        arc_start = get_arc_degrees(otherarcpoint)
+        arc_end = get_arc_degrees(coordinates)
 
-    coordinates[5] = radius
-    return get_extremes_from_arc(arc_end, arc_start, coordinates, arc_center)
-
-
-def get_extremes_from_arc(arc_end, arc_start, coordinates, arc_center):
-    # min/max calculations needed later on
-    xyz = [coordinates[0], coordinates[1], coordinates[2]]
-    radius = coordinates[5]
-    x_plus_radius = [arc_center[0] + radius, arc_center[1], xyz[2]]
-    y_plus_radius = [arc_center[0], arc_center[1] + radius, xyz[2]]
-    x_minus_radius = [arc_center[0] - radius, arc_center[1], xyz[2]]
-    y_minus_radius = [arc_center[0], arc_center[1] - radius, xyz[2]]
-    extremevalue_order = [0, y_plus_radius, x_minus_radius, y_minus_radius, x_plus_radius]
-    if (arc_end - arc_start) < 0:
-        # crossing the 0° line (x-axis)
-        arc_end += 360
-    result = []
-    for crossing_angle in range(90, 361, 90):
-        if crossing_angle in range(int(arc_start), int(arc_end)):
-            result.append(extremevalue_order[int(crossing_angle / 90)])
-    result.append(xyz)
-    return result
+    return get_extremes_from_arc(arc_end, arc_start, coordinates)
 
 
 def create_dataset_from_input(file):
