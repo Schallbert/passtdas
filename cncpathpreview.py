@@ -75,9 +75,8 @@ def get_arc_degrees(coordinates, arc_center, radius):
     @:return arc's length in degrees"""
     if radius <= 0:
         return 0
-    cos = round((coordinates[0] - arc_center[0]) / radius, 3)  # cos = deltax / radius
-    print(cos)
-    rad = acos(cos)
+    cosinus = round((coordinates[0] - arc_center[0]) / radius, 3)  # cos = deltax / radius
+    rad = acos(cosinus)
     if (coordinates[1] - arc_center[1]) < 0:
         #  negative y, count from 360° backwards
         rad = 2*pi - rad
@@ -117,6 +116,12 @@ def handle_linear_move(coordinates):
     return [coordinates[0], coordinates[1], coordinates[2]]
 
 def handle_arc_move_r(coordinates, previous_coordinates, move_type):
+    """handles an arc move command by finding out arc span and position.
+        It then finds the arc's extreme values and returns them.
+        @:param coordinates: the target move coordinates
+        @:param previous_coordinates: a valid target coordinate from the past
+        @:param move_type: An enum indicating arc direction
+        @:return one or multiple valid coordinates depending on arc length and position or empty list in case of an error."""
     p1p2_midpoint_x = (coordinates[0] + previous_coordinates[0]) / 2
     p1p2_midpoint_y = (coordinates[1] + previous_coordinates[1]) / 2
     p1p2_distance_x = coordinates[0] - previous_coordinates[0]
