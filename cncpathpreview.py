@@ -95,7 +95,7 @@ def get_arc_degrees(coordinates):
     except ValueError:
         click.echo('Error: Value out of range for acos calculation (+-pi). Value: ' + str(cosinus), err=True)
         raise ValueError
-    if (coordinates[1] - coordinates[4]) < 0:
+    if coordinates[1] < coordinates[4]:
         #  negative y, count from 360° backwards
         rad = 2*pi - rad
     return round(degrees(rad), 0)
@@ -154,19 +154,19 @@ def handle_arc_move_r(coordinates, previous_coordinates, move_type):
     p1p2_90degslope = -(p1p2_distance_x / p1p2_distance_y)
     angle = atan(p1p2_90degslope)
     arc_height = coordinates[5] - sqrt(coordinates[5] ** 2 - ((p1p2_distance / 2) ** 2))
-
-    coordinates[3] = p1p2_midpoint_x + cos(angle) * (coordinates[5] - arc_height)
-    if move_type == MoveType.ARC_ANTICLOCK:
+    coordinates[3] = p1p2_midpoint_x - cos(angle) * (coordinates[5] - arc_height)
+    if move_type == MoveType.ARC_CLOCKWISE:
         coordinates[4] = p1p2_midpoint_y - p1p2_90degslope * (coordinates[3] - p1p2_midpoint_x)
+        previous_coordinates = fill_previous_coordinates(coordinates, previous_coordinates)
         arc_start = get_arc_degrees(coordinates)
         arc_end = get_arc_degrees(previous_coordinates)
     else:
         coordinates[4] = p1p2_midpoint_y + p1p2_90degslope * (coordinates[3] - p1p2_midpoint_x)
+        previous_coordinates = fill_previous_coordinates(coordinates, previous_coordinates)
         arc_start = get_arc_degrees(previous_coordinates)
         arc_end = get_arc_degrees(coordinates)
 
     return get_extremes_from_arc(arc_end, arc_start, coordinates)
-
 
 def handle_arc_move_ij(coordinates, previous_coordinates, move_type):
     """handles an arc move command by finding out arc radius, span, and position.
@@ -179,10 +179,7 @@ def handle_arc_move_ij(coordinates, previous_coordinates, move_type):
     #  calculate arc_center from ij_offset and previous XY coordinates
     coordinates[3] = previous_coordinates[0] + coordinates[3]
     coordinates[4] = previous_coordinates[1] + coordinates[4]
-    otherarcpoint = coordinates
-    otherarcpoint[0] = previous_coordinates[0]
-    otherarcpoint[1] = previous_coordinates[1]
-    otherarcpoint[2] = previous_coordinates[2]
+    otherarcpoint = fill_previous_coordinates(coordinates, previous_coordinates)
 
     if move_type == MoveType.ARC_CLOCKWISE:
         arc_start = get_arc_degrees(coordinates)
@@ -192,6 +189,16 @@ def handle_arc_move_ij(coordinates, previous_coordinates, move_type):
         arc_end = get_arc_degrees(coordinates)
 
     return get_extremes_from_arc(arc_end, arc_start, coordinates)
+
+def fill_previous_coordinates(coordinates, previous_coordinates):
+    otherarcpoint = [0, 0, 0, 0, 0, 0]
+    otherarcpoint[0] = previous_coordinates[0]
+    otherarcpoint[1] = previous_coordinates[1]
+    otherarcpoint[2] = previous_coordinates[2]
+    otherarcpoint[3] = coordinates[3]
+    otherarcpoint[4] = coordinates[4]
+    otherarcpoint[5] = coordinates[5]
+    return otherarcpoint
 
 
 def create_dataset_from_input(file):
