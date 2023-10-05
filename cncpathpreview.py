@@ -136,12 +136,6 @@ def handle_coordinate_shift(line, shift):
             shift[i] -= coordinate_system_shift[i]
     return shift
 
-def handle_linear_move(coordinates):
-    """handles a linear move command by parsing into floats, filling in 'None values'.
-    @:param line: an input command, previous_coordinates: a valid target coordinate from the past
-    @:return a valid coordinate"""
-    return [coordinates[0], coordinates[1], coordinates[2]]
-
 def handle_arc_move_r(coordinates, previous_coordinates, move_type):
     """handles an arc move command by finding out arc span and position.
         It then finds the arc's extreme values and returns them.
@@ -161,17 +155,17 @@ def handle_arc_move_r(coordinates, previous_coordinates, move_type):
     angle = atan(p1p2_90degslope)
     arc_height = coordinates[5] - sqrt(coordinates[5] ** 2 - ((p1p2_distance / 2) ** 2))
 
-    center_x = p1p2_midpoint_x + cos(angle) * (coordinates[5] - arc_height)
+    coordinates[3] = p1p2_midpoint_x + cos(angle) * (coordinates[5] - arc_height)
     if move_type == MoveType.ARC_ANTICLOCK:
-        center_y = p1p2_midpoint_y - p1p2_90degslope * (center_x - p1p2_midpoint_x)
-        arc_start = get_arc_degrees(coordinates, [center_x, center_y], coordinates[5])
-        arc_end = get_arc_degrees(previous_coordinates, [center_x, center_y], coordinates[5])
+        coordinates[4] = p1p2_midpoint_y - p1p2_90degslope * (coordinates[3] - p1p2_midpoint_x)
+        arc_start = get_arc_degrees(coordinates)
+        arc_end = get_arc_degrees(previous_coordinates)
     else:
-        center_y = p1p2_midpoint_y + p1p2_90degslope * (center_x - p1p2_midpoint_x)
-        arc_start = get_arc_degrees(previous_coordinates, [center_x, center_y], coordinates[5])
-        arc_end = get_arc_degrees(coordinates, [center_x, center_y], coordinates[5])
+        coordinates[4] = p1p2_midpoint_y + p1p2_90degslope * (coordinates[3] - p1p2_midpoint_x)
+        arc_start = get_arc_degrees(previous_coordinates)
+        arc_end = get_arc_degrees(coordinates)
 
-    return get_extremes_from_arc(arc_end, arc_start, coordinates, [center_x, center_y])
+    return get_extremes_from_arc(arc_end, arc_start, coordinates)
 
 
 def handle_arc_move_ij(coordinates, previous_coordinates, move_type):
@@ -186,7 +180,6 @@ def handle_arc_move_ij(coordinates, previous_coordinates, move_type):
     coordinates[3] = previous_coordinates[0] + coordinates[3]
     coordinates[4] = previous_coordinates[1] + coordinates[4]
     otherarcpoint = coordinates
-    print(otherarcpoint)
     otherarcpoint[0] = previous_coordinates[0]
     otherarcpoint[1] = previous_coordinates[1]
     otherarcpoint[2] = previous_coordinates[2]
@@ -221,7 +214,7 @@ def create_dataset_from_input(file):
                 continue
             coordinates = fill_coordinates(parse_coordinates(line), previous_coordinates, shift)
             if move_type == MoveType.LINEAR:
-                data.append(handle_linear_move(coordinates))
+                data.append([coordinates[0], coordinates[1], coordinates[2]])
             else:
                 if coordinates[5]:
                     #  arc move with given radius

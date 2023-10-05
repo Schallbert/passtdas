@@ -154,4 +154,35 @@ class TestAlgorithms(unittest.TestCase):
         self.assertEqual([[0, 5.66, 0], [-5.66, 0, 0], [0, -5.66, 0], [4, -4, 0]],
                          cnc.get_extremes_from_arc(300, 35, coordinates))
 
+    def test_getextremesfromarc_arccrossesall90degpoles_returnsfourpoles(self):
+        coordinates = [4, 4, 0, 0, 0, 5.66]
+        self.assertEqual([[0, 5.66, 0], [-5.66, 0, 0], [0, -5.66, 0],[5.66, 0, 0], [4, 4, 0]],
+                         cnc.get_extremes_from_arc(20, 21, coordinates))
+
+class TestGenerators(unittest.TestCase):
+
+    def setUp(self) -> None:
+        pass
+
+    def test_handlecoordinateshift_noinputshift_returnsoriginalshift(self):
+        coordinates = 'G01 X0 Y0 Z0'
+        shift = [10, 20, 30]
+        self.assertEqual(shift, cnc.handle_coordinate_shift(coordinates, shift))
+
+    def test_handlecoordinateshift_shift_returnsshift(self):
+        coordinates = 'G01 X10 Y20 Z30'
+        shift = [0, 0, 0]
+        self.assertEqual([-10, -20, -30], cnc.handle_coordinate_shift(coordinates, shift))
+
+    def test_handlecoordinateshift_superposition_returnsshift(self):
+        coordinates = 'G01 X10 Y20 Z30'
+        shift = [15, 25, 35]
+        self.assertEqual([5, 5, 5], cnc.handle_coordinate_shift(coordinates, shift))
+
+    def test_getcoordinatestring_returnscorrectoutput(self):
+        axis = 'ymin'
+        coordinate = ['1', '2', '3']
+        expectedstring = 'MSG "PathPreview: Hit START to go to ymin: [\'1\', \'2\', \'3\']"\nM00\nG00 X1 Y2 Z3\n\n'
+        self.assertEqual(expectedstring, cnc.get_coordinate_strings(axis, coordinate))
+
 
