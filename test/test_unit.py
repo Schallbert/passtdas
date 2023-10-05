@@ -133,6 +133,10 @@ class TestAlgorithms(unittest.TestCase):
         coordinates = [0, 5.66, 0, 0, 0, 5.66]
         self.assertEqual(90, round(cpp.get_arc_degrees(coordinates), 0))
 
+    def test_getarcdegrees_inputspanis180_returns180(self):
+        coordinates = [-5.66, 0, 0, 0, 0, 5.66]
+        self.assertEqual(180, round(cpp.get_arc_degrees(coordinates), 0))
+
     def test_getarcdegrees_inputspanis225_returns225(self):
         coordinates = [-4, -4, 0, 0, 0, 5.66]
         self.assertEqual(225, round(cpp.get_arc_degrees(coordinates), 0))

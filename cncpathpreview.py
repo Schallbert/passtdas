@@ -97,10 +97,12 @@ def get_arc_degrees(coordinates):
         raise ValueError
     if coordinates[1] < coordinates[4]:
         #  negative y, count from 360° backwards
-        rad = 2*pi - rad
+        rad = 2 * pi - rad
     return round(degrees(rad), 0)
 
 def get_extremes_from_arc(arc_end, arc_start, coordinates):
+    print([arc_start, arc_end])
+    print(coordinates)
     """Calculator function that returns minimum one but up to five possible extreme points from an arc definition.
     @:param arc_end: angle of the end of an arc
     @:param arc_start: angle of the start of an arc
@@ -115,12 +117,15 @@ def get_extremes_from_arc(arc_end, arc_start, coordinates):
     y_minus_radius = [coordinates[3], coordinates[4] - radius, xyz[2]]
     extremevalue_order = [0, y_plus_radius, x_minus_radius, y_minus_radius, x_plus_radius]
     if (arc_end - arc_start) < 0:
-        # crossing the 0° line (x-axis)
+        # crossing the 0° line (x-axis), handle overflow with nested if below
         arc_end += 360
     result = []
-    for crossing_angle in range(90, 361, 90):
+    for crossing_angle in range(90, 451, 90):
         if crossing_angle in range(int(arc_start), int(arc_end)):
-            result.append(extremevalue_order[int(crossing_angle / 90)])
+            i = int(crossing_angle / 90)
+            if i > 4:
+                i -= 4
+            result.append(extremevalue_order[i])
     result.append(xyz)
     return result
 
@@ -149,12 +154,25 @@ def handle_arc_move_r(coordinates, previous_coordinates, move_type):
     p1p2_distance_y = coordinates[1] - previous_coordinates[1]
     p1p2_distance = sqrt(p1p2_distance_x ** 2 + p1p2_distance_y ** 2)
 
-    if p1p2_distance == 0:
-        return [None, None, None]
-    p1p2_90degslope = -(p1p2_distance_x / p1p2_distance_y)
-    angle = atan(p1p2_90degslope)
+    #  special case handling where atan is not defined or where signedness is unclear
+    if p1p2_distance_x == 0:
+        cosinus = -1
+        p1p2_90degslope = 0
+        if p1p2_distance_y < 0:
+            cosinus = 1
+    elif p1p2_distance_y == 0:
+        cosinus = 0
+        p1p2_90degslope = 1
+        if p1p2_distance_x < 0:
+            p1p2_90degslope = -1
+    else:
+        p1p2_90degslope = -(p1p2_distance_x / p1p2_distance_y)
+        angle = atan(p1p2_90degslope)
+        cosinus = cos(angle)
+
     arc_height = coordinates[5] - sqrt(coordinates[5] ** 2 - ((p1p2_distance / 2) ** 2))
-    coordinates[3] = p1p2_midpoint_x - cos(angle) * (coordinates[5] - arc_height)
+    coordinates[3] = p1p2_midpoint_x - cosinus * (coordinates[5] - arc_height)
+
     if move_type == MoveType.ARC_CLOCKWISE:
         coordinates[4] = p1p2_midpoint_y - p1p2_90degslope * (coordinates[3] - p1p2_midpoint_x)
         previous_coordinates = fill_previous_coordinates(coordinates, previous_coordinates)
