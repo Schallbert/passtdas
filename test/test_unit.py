@@ -114,10 +114,21 @@ class TestAlgorithms(unittest.TestCase):
         maxlist = [15, 25, 35]
         self.assertEqual(minlist, cpp.get_min_by_column([minlist, maxlist], 2))
 
-    def test_getardegrees_inputcreatescosoutofrange_raisesvalueerror(self):
+    def test_getardegrees_inputcreatescosoutofrangepositive_correctsValueTo1(self):
         coordinates = [10, 0, 0, 1, 0, 1]
-        with self.assertRaises(ValueError): (
-            cpp.get_arc_degrees(coordinates))
+        self.assertEqual(0, cpp.get_arc_degrees(coordinates))
+
+    def test_getardegrees_inputcreatescosoutofrangenegative_correctsValueToMinus1(self):
+        coordinates = [-10, 0, 0, 1, 0, 1]
+        self.assertEqual(180, cpp.get_arc_degrees(coordinates))
+
+    def test_getardegrees_inputcreatescosoutofrangepositivey_correctsValueTo1(self):
+        coordinates = [0, 10, 0, 0, 1, 1]
+        self.assertEqual(90, cpp.get_arc_degrees(coordinates))
+
+    def test_getardegrees_inputcreatescosoutofrangenegativey_correctsValueToMinus1(self):
+        coordinates = [0, -10, 0, 0, 1, 1]
+        self.assertEqual(270, cpp.get_arc_degrees(coordinates))
 
     def test_getarcdegrees_inputradiusis0_returns0(self):
         coordinates = [0, 0, 0, 0, 0, 0]

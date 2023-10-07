@@ -90,11 +90,11 @@ def get_arc_degrees(coordinates):
     if coordinates[5] <= 0:
         return 0
     cosinus = round((coordinates[0] - coordinates[3]) / coordinates[5], 3)  # cos = deltax / radius
-    try:
-        rad = acos(cosinus)
-    except ValueError:
-        click.echo('Error: Value out of range for acos calculation (+-pi). Value: ' + str(cosinus), err=True)
-        raise ValueError
+    if cosinus > 1:
+        cosinus = 1
+    elif cosinus < -1:
+        cosinus = -1
+    rad = acos(cosinus)
     if coordinates[1] < coordinates[4]:
         #  negative y, count from 360° backwards
         rad = 2 * pi - rad
@@ -130,7 +130,6 @@ def get_extremes_from_arc(arc_end, arc_start, coordinates):
     x_minus_radius = [center_x - radius, center_y, xyz[2]]
     y_minus_radius = [center_x, center_y - radius, xyz[2]]
     extremevalue_order = [x_plus_radius, y_plus_radius, x_minus_radius, y_minus_radius]
-    print(extremevalue_order)
     if (arc_end - arc_start) < 0:
         # crossing the 0° line (x-axis), handle overflow with nested if below
         arc_end += 360
@@ -141,9 +140,7 @@ def get_extremes_from_arc(arc_end, arc_start, coordinates):
             i = int(crossing_angle / 90)
             if i > 3:
                 i -= 4
-            print(i)
             result.append(extremevalue_order[i])
-    print(result)
     return remove_duplicate(result, xyz)
 
 def handle_coordinate_shift(line, shift):
@@ -185,16 +182,11 @@ def handle_arc_move_r(coordinates, previous_coordinates, move_type):
     if previous_coordinates[1] < 0 or coordinates[1] < 0:
         cosinus *= -1
 
-    print(cosinus)
-    print(p1p2_90degslope)
-
     arc_height = coordinates[5] - sqrt(coordinates[5] ** 2 - ((p1p2_distance / 2) ** 2))
     coordinates[3] = p1p2_midpoint_x - cosinus * (coordinates[5] - arc_height)
     coordinates[4] = p1p2_midpoint_y + p1p2_90degslope * (coordinates[3] - p1p2_midpoint_x)
     previous_coordinates = fill_previous_coordinates(coordinates, previous_coordinates)
 
-    print(coordinates)
-    print(previous_coordinates)
     if move_type == MoveType.ARC_CLOCKWISE:
         arc_start = get_arc_degrees(coordinates)
         arc_end = get_arc_degrees(previous_coordinates)
