@@ -120,7 +120,7 @@ def get_extremes_from_arc(arc_end, arc_start, coordinates):
         # crossing the 0° line (x-axis), handle overflow with nested if below
         arc_end += 360
     result = []
-    for crossing_angle in range(90, 451, 90):
+    for crossing_angle in range(90, 721, 90):
         if crossing_angle in range(int(arc_start), int(arc_end)):
             i = int(crossing_angle / 90)
             if i > 4:
@@ -155,32 +155,33 @@ def handle_arc_move_r(coordinates, previous_coordinates, move_type):
     p1p2_distance = sqrt(p1p2_distance_x ** 2 + p1p2_distance_y ** 2)
 
     #  special case handling where atan is not defined or where signedness is unclear
-    if p1p2_distance_x == 0:
-        cosinus = -1
-        p1p2_90degslope = 0
-        if p1p2_distance_y < 0:
-            cosinus = 1
-    elif p1p2_distance_y == 0:
+
+    if p1p2_distance_y == 0:
+        p1p2_90degslope = 10000
         cosinus = 0
-        p1p2_90degslope = 1
         if p1p2_distance_x < 0:
-            p1p2_90degslope = -1
+            p1p2_90degslope *= -1
     else:
         p1p2_90degslope = -(p1p2_distance_x / p1p2_distance_y)
-        angle = atan(p1p2_90degslope)
-        cosinus = cos(angle)
+        cosinus = cos(atan(p1p2_90degslope))
+    #  handle cosinus shift by 180° for negative Y
+    if previous_coordinates[1] < 0 or coordinates[1] < 0:
+        cosinus *= -1
+
+    print(cosinus)
+    print(p1p2_90degslope)
 
     arc_height = coordinates[5] - sqrt(coordinates[5] ** 2 - ((p1p2_distance / 2) ** 2))
     coordinates[3] = p1p2_midpoint_x - cosinus * (coordinates[5] - arc_height)
+    coordinates[4] = p1p2_midpoint_y + p1p2_90degslope * (coordinates[3] - p1p2_midpoint_x)
+    previous_coordinates = fill_previous_coordinates(coordinates, previous_coordinates)
 
+    print(coordinates)
+    print(previous_coordinates)
     if move_type == MoveType.ARC_CLOCKWISE:
-        coordinates[4] = p1p2_midpoint_y - p1p2_90degslope * (coordinates[3] - p1p2_midpoint_x)
-        previous_coordinates = fill_previous_coordinates(coordinates, previous_coordinates)
         arc_start = get_arc_degrees(coordinates)
         arc_end = get_arc_degrees(previous_coordinates)
     else:
-        coordinates[4] = p1p2_midpoint_y + p1p2_90degslope * (coordinates[3] - p1p2_midpoint_x)
-        previous_coordinates = fill_previous_coordinates(coordinates, previous_coordinates)
         arc_start = get_arc_degrees(previous_coordinates)
         arc_end = get_arc_degrees(coordinates)
 
