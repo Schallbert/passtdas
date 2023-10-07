@@ -21,65 +21,121 @@ class TestIntegration(unittest.TestCase):
     left = [-5.66, 0, 0]
     right = [5.66, 0, 0]
 
-    def test_handlearcmover_anticlockpassesnoquadrant_returnscorrectresults(self):
+    def test_handlearcmover_anticlockpassesnoquadrant_ok(self):
         previous_coordinates = self.right  # 0°
         coordinates = [4, 4, 0, None, None, 5.66]  # 45°
-        expected = [[4, 4, 0]]
+        expected = [self.right, [4, 4, 0]]
         actual = cpp.handle_arc_move_r(coordinates, previous_coordinates, cpp.MoveType.ARC_ANTICLOCK)
         self.assertEqual(expected, roundlistitems(actual))
 
-    def test_handlearcmover_anticlockpassesonequadrant_returnscorrectresults(self):
+    def test_handlearcmover_anticlockpassesonequadrant_ok(self):
         previous_coordinates = self.right  # 0°
         coordinates = [-4, 4, 0, None, None, 5.66]  # 135°
-        expected = [self.top, [-4, 4, 0]]
+        expected = [self.right, self.top, [-4, 4, 0]]
         actual = cpp.handle_arc_move_r(coordinates, previous_coordinates, cpp.MoveType.ARC_ANTICLOCK)
         self.assertEqual(expected, roundlistitems(actual))
 
-    def test_handlearcmover_anticlockpassesthreequadrants_returnscorrectresults(self):
+    def test_handlearcmover_anticlockpassesthreequadrants_ok(self):
         previous_coordinates = [-4, -4, 0]  # 225°
         coordinates = [-4, 4, 0, None, None, 5.66]  # 135°
         expected = [self.bottom, self.right, self.top, [-4, 4, 0]]
         actual = cpp.handle_arc_move_r(coordinates, previous_coordinates, cpp.MoveType.ARC_ANTICLOCK)
         self.assertEqual(expected, roundlistitems(actual))
 
-    def test_handlearcmover_anticlockpassesallquadrants_returnscorrectresults(self):
+    def test_handlearcmover_anticlockpassesallquadrants_ok(self):
         previous_coordinates = [-4, -4, 0]  # 225°
         coordinates = [-5.66, 0, 0, None, None, 5.66]  # 180°
         expected = [self.bottom, self.right, self.top, self.left]
         actual = cpp.handle_arc_move_r(coordinates, previous_coordinates, cpp.MoveType.ARC_ANTICLOCK)
         self.assertEqual(expected, roundlistitems(actual))
 
-    def test_handlearcmover_clockwisepassesnoquadrant_returnscorrectresults(self):
+    def test_handlearcmover_anticlockxarc180start180_ok(self):
+        previous_coordinates = [-5.66, 0, 0,]  # 180°
+        coordinates = [5.66, 0, 0, None, None, 5.66]  # 0°
+        expected = [self.left, self.bottom, self.right]
+        actual = cpp.handle_arc_move_r(coordinates, previous_coordinates, cpp.MoveType.ARC_ANTICLOCK)
+        self.assertEqual(expected, roundlistitems(actual))
+
+    def test_handlearcmover_anticlockyarc180start270_ok(self):
+        previous_coordinates = [0, -5.66, 0,]  # 270°
+        coordinates = [0, 5.66, 0, None, None, 5.66]  # 90°
+        expected = [self.bottom, self.right, self.top]
+        actual = cpp.handle_arc_move_r(coordinates, previous_coordinates, cpp.MoveType.ARC_ANTICLOCK)
+        self.assertEqual(expected, roundlistitems(actual))
+
+    def test_handlearcmover_anticlockxarc180start0_ok(self):
+        previous_coordinates = [5.66, 0, 0,]  # 0°
+        coordinates = [-5.66, 0, 0, None, None, 5.66]  # 180°
+        expected = [self.right, self.top, self.left]
+        actual = cpp.handle_arc_move_r(coordinates, previous_coordinates, cpp.MoveType.ARC_ANTICLOCK)
+        self.assertEqual(expected, roundlistitems(actual))
+
+    def test_handlearcmover_anticlockyarc180start90_ok(self):
+        previous_coordinates = [0, 5.66, 0,]  # 90°
+        coordinates = [0, -5.66, 0, None, None, 5.66]  # 270°
+        expected = [self.top, self.left, self.bottom]
+        actual = cpp.handle_arc_move_r(coordinates, previous_coordinates, cpp.MoveType.ARC_ANTICLOCK)
+        self.assertEqual(expected, roundlistitems(actual))
+
+    def test_handlearcmover_clockwisepassesnoquadrant_ok(self):
         previous_coordinates = [4, 4, 0]  # 45°
         coordinates = [5.66, 0, 0, None, None, 5.66]  # 0°
-        expected = [[5.66, 0, 0]]
+        expected = [self.right]
         actual = cpp.handle_arc_move_r(coordinates, previous_coordinates, cpp.MoveType.ARC_CLOCKWISE)
         self.assertEqual(expected, roundlistitems(actual))
 
-    def test_handlearcmover_clockwisepassesonequadrant_returnscorrectresults(self):
+    def test_handlearcmover_clockwisepassesonequadrant_ok(self):
         previous_coordinates = [-4, 4, 0]  # 135°
         coordinates = [5.66, 0, 0, None, None, 5.66]  # 0°
-        expected = [self.top, [5.66, 0, 0]]
+        expected = [self.right, self.top]
         actual = cpp.handle_arc_move_r(coordinates, previous_coordinates, cpp.MoveType.ARC_CLOCKWISE)
         self.assertEqual(expected, roundlistitems(actual))
 
-    def test_handlearcmover_clockwisepassesthreequadrants_returnscorrectresults(self):
+    def test_handlearcmover_clockwisepassesthreequadrants_ok(self):
         previous_coordinates = [-4, 4, 0]  # 135°
         coordinates = [-4, -4, 0, None, None, 5.66]  # 225°
         expected = [self.bottom, self.right, self.top, [-4, -4, 0]]
         actual = cpp.handle_arc_move_r(coordinates, previous_coordinates, cpp.MoveType.ARC_CLOCKWISE)
         self.assertEqual(expected, roundlistitems(actual))
 
-    def test_handlearcmover_clockwisepassesallquadrants_returnscorrectresults(self):
+    def test_handlearcmover_clockwisepassesallquadrants_ok(self):
         previous_coordinates = [-5.66, 0, 0]  # 180°
         coordinates = [-4, -4, 0, None, None, 5.66]  # 225°
-        expected = [self.bottom, self.right, self.top, [-4, -4, 0]]
+        expected = [self.bottom, self.right, self.top, self.left, [-4, -4, 0]]
         actual = cpp.handle_arc_move_r(coordinates, previous_coordinates, cpp.MoveType.ARC_CLOCKWISE)
         self.assertEqual(expected, roundlistitems(actual))
 
-    def test_handlearcmoveij_passesonequadrant_returnscorrectresults(self):
+    def test_handlearcmover_clockwisexarc180_start0_ok(self):
+        previous_coordinates = [5.66, 0, 0,]  # 0°
+        coordinates = [-5.66, 0, 0, None, None, 5.66]  # 180°
+        expected = [self.left, self.bottom, self.right]
+        actual = cpp.handle_arc_move_r(coordinates, previous_coordinates, cpp.MoveType.ARC_CLOCKWISE)
+        self.assertEqual(expected, roundlistitems(actual))
+
+    def test_handlearcmover_clockwiseyarc180_start90_ok(self):
+        previous_coordinates = [0, 5.66, 0,]  # 90°
+        coordinates = [0, -5.66, 0, None, None, 5.66]  # 270°
+        expected = [self.bottom, self.right, self.top]
+        actual = cpp.handle_arc_move_r(coordinates, previous_coordinates, cpp.MoveType.ARC_CLOCKWISE)
+        self.assertEqual(expected, roundlistitems(actual))
+
+    def test_handlearcmover_clockwisexarc180_start180_ok(self):
+        previous_coordinates = [-5.66, 0, 0,]  # 180°
+        coordinates = [5.66, 0, 0, None, None, 5.66]  # 0°
+        expected = [self.right, self.top, self.left]
+        actual = cpp.handle_arc_move_r(coordinates, previous_coordinates, cpp.MoveType.ARC_CLOCKWISE)
+        self.assertEqual(expected, roundlistitems(actual))
+
+    def test_handlearcmover_clockwiseyarc180_start270_ok(self):
+        previous_coordinates = [0, -5.66, 0,]  # 270°
+        coordinates = [0, 5.66, 0, None, None, 5.66]  # 90°
+        expected = [self.top, self.left, self.bottom]
+        actual = cpp.handle_arc_move_r(coordinates, previous_coordinates, cpp.MoveType.ARC_CLOCKWISE)
+        self.assertEqual(expected, roundlistitems(actual))
+
+    def test_handlearcmoveij_passesonequadrant_ok(self):
         previous_coordinates = [5.66, 0, 0]  # 0°
         coordinates = [-4, 4, 0, -5.66, 0, None]  # 135°
-        expected = [self.top, [-4, 4, 0]]
+        expected = [self.right, self.top, [-4, 4, 0]]
         actua = cpp.handle_arc_move_ij(coordinates, previous_coordinates, cpp.MoveType.ARC_ANTICLOCK)
         self.assertEqual(expected, roundlistitems(actua))

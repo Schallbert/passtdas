@@ -1,6 +1,6 @@
 from enum import Enum
 import click
-from math import sqrt, acos, cos, atan, pi, degrees
+from math import sqrt, acos, cos, atan, pi, degrees, isclose
 
 class MoveType(Enum):
     NONE = 0
@@ -100,6 +100,18 @@ def get_arc_degrees(coordinates):
         rad = 2 * pi - rad
     return round(degrees(rad), 0)
 
+def remove_duplicate(input_list, compare):
+    for item in input_list:
+        duplicate = True
+        for i in range(0, len(item)):
+            duplicate &= isclose(item[i], compare[i], rel_tol=0.01)
+        if duplicate:
+            return input_list
+    input_list.append(compare)
+    return input_list
+
+
+
 def get_extremes_from_arc(arc_end, arc_start, coordinates):
     print([arc_start, arc_end])
     print(coordinates)
@@ -111,23 +123,28 @@ def get_extremes_from_arc(arc_end, arc_start, coordinates):
     # min/max calculations needed later on
     xyz = [coordinates[0], coordinates[1], coordinates[2]]
     radius = coordinates[5]
-    x_plus_radius = [coordinates[3] + radius, coordinates[4], xyz[2]]
-    y_plus_radius = [coordinates[3], coordinates[4] + radius, xyz[2]]
-    x_minus_radius = [coordinates[3] - radius, coordinates[4], xyz[2]]
-    y_minus_radius = [coordinates[3], coordinates[4] - radius, xyz[2]]
-    extremevalue_order = [0, y_plus_radius, x_minus_radius, y_minus_radius, x_plus_radius]
+    center_x = round(coordinates[3], 2)
+    center_y = round(coordinates[4], 2)
+    x_plus_radius = [center_x + radius, center_y, xyz[2]]
+    y_plus_radius = [center_x, center_y + radius, xyz[2]]
+    x_minus_radius = [center_x - radius, center_y, xyz[2]]
+    y_minus_radius = [center_x, center_y - radius, xyz[2]]
+    extremevalue_order = [x_plus_radius, y_plus_radius, x_minus_radius, y_minus_radius]
+    print(extremevalue_order)
     if (arc_end - arc_start) < 0:
         # crossing the 0° line (x-axis), handle overflow with nested if below
         arc_end += 360
     result = []
-    for crossing_angle in range(90, 721, 90):
-        if crossing_angle in range(int(arc_start), int(arc_end)):
+    print('modifiedarc: ' + str([arc_start, arc_end]))
+    for crossing_angle in range(0, 721, 90):
+        if crossing_angle in range(int(arc_start), int(arc_end + 1)):
             i = int(crossing_angle / 90)
-            if i > 4:
+            if i > 3:
                 i -= 4
+            print(i)
             result.append(extremevalue_order[i])
-    result.append(xyz)
-    return result
+    print(result)
+    return remove_duplicate(result, xyz)
 
 def handle_coordinate_shift(line, shift):
     """Checks how the coordinate system has been shifted. Returns the shift to be superpositioned onto move commands.

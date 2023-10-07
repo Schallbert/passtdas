@@ -88,6 +88,12 @@ class TestAlgorithms(unittest.TestCase):
     def setUp(self):
         pass
 
+    top = [0, 5.66, 0]
+    bottom = [0, -5.66, 0]
+    left = [-5.66, 0, 0]
+    right = [5.66, 0, 0]
+
+
     def test_getmax_returnsmax(self):
         minlist = [10, 20, 30]
         maxlist = [15, 25, 35]
@@ -108,14 +114,14 @@ class TestAlgorithms(unittest.TestCase):
         maxlist = [15, 25, 35]
         self.assertEqual(minlist, cpp.get_min_by_column([minlist, maxlist], 2))
 
-    def test_getarcdegrees_inputradiusis0_returns0(self):
-        coordinates = [0, 0, 0, 0, 0, 0]
-        self.assertEqual(0, cpp.get_arc_degrees(coordinates))
-
     def test_getardegrees_inputcreatescosoutofrange_raisesvalueerror(self):
         coordinates = [10, 0, 0, 1, 0, 1]
         with self.assertRaises(ValueError): (
             cpp.get_arc_degrees(coordinates))
+
+    def test_getarcdegrees_inputradiusis0_returns0(self):
+        coordinates = [0, 0, 0, 0, 0, 0]
+        self.assertEqual(0, cpp.get_arc_degrees(coordinates))
 
     def test_getarcdegrees_inputspanis0_returns0(self):
         coordinates = [5.66, 0, 0, 0, 0, 5.66]
@@ -125,13 +131,13 @@ class TestAlgorithms(unittest.TestCase):
         coordinates = [4, 4, 0, 0, 0, 5.66]
         self.assertEqual(45, round(cpp.get_arc_degrees(coordinates), 0))
 
-    def test_getarcdegrees_inputspanis135_returns135(self):
-        coordinates = [-4, 4, 0, 0, 0, 5.66]
-        self.assertEqual(135, round(cpp.get_arc_degrees(coordinates), 0))
-
     def test_getarcdegrees_inputspanis90_returns90(self):
         coordinates = [0, 5.66, 0, 0, 0, 5.66]
         self.assertEqual(90, round(cpp.get_arc_degrees(coordinates), 0))
+
+    def test_getarcdegrees_inputspanis135_returns135(self):
+        coordinates = [-4, 4, 0, 0, 0, 5.66]
+        self.assertEqual(135, round(cpp.get_arc_degrees(coordinates), 0))
 
     def test_getarcdegrees_inputspanis180_returns180(self):
         coordinates = [-5.66, 0, 0, 0, 0, 5.66]
@@ -151,18 +157,37 @@ class TestAlgorithms(unittest.TestCase):
 
     def test_getextremesfromarc_arccrossesone90degpole_returns90pole(self):
         coordinates = [4, 4, 0, 0, 0, 5.66]
-        self.assertEqual([[0, 5.66, 0], [4, 4, 0]], cpp.get_extremes_from_arc(135, 35, coordinates))
+        self.assertEqual([self.top, [4, 4, 0]], cpp.get_extremes_from_arc(135, 35, coordinates))
 
     def test_getextremesfromarc_arccrossesthree90degpoles_returnsthreepoles(self):
         coordinates = [4, -4, 0, 0, 0, 5.66]
-        self.assertEqual([[0, 5.66, 0], [-5.66, 0, 0], [0, -5.66, 0], [4, -4, 0]],
+        self.assertEqual([self.top, self.left, self.bottom, [4, -4, 0]],
                          cpp.get_extremes_from_arc(300, 35, coordinates))
 
     def test_getextremesfromarc_arccrossesall90degpoles_returnsfourpoles(self):
         coordinates = [4, 4, 0, 0, 0, 5.66]
-        self.assertEqual([[0, 5.66, 0], [-5.66, 0, 0], [0, -5.66, 0],[5.66, 0, 0], [4, 4, 0]],
+        self.assertEqual([self.top, self.left,self.bottom, self.right, [4, 4, 0]],
                          cpp.get_extremes_from_arc(20, 21, coordinates))
 
+    def test_getextremesfromarc_0to180_returnsthreepoles(self):
+        coordinates = [-5.66, 0, 0, 0, 0, 5.66]
+        self.assertEqual([self.right, self.top, self.left],
+                         cpp.get_extremes_from_arc(180, 0, coordinates))
+
+    def test_getextremesfromarc_90to270_returnsthreepoles(self):
+        coordinates = [0, -5.66, 0, 0, 0, 5.66]
+        self.assertEqual([self.top, self.left, self.bottom],
+                         cpp.get_extremes_from_arc(270, 90, coordinates))
+
+    def test_getextremesfromarc_180to0_returnsthreepoles(self):
+        coordinates = [5.66, 0, 0, 0, 0, 5.66]
+        self.assertEqual([self.left, self.bottom, self.right],
+                         cpp.get_extremes_from_arc(0, 180, coordinates))
+
+    def test_getextremesfromarc_270to90_returnsthreepoles(self):
+        coordinates = [0, 5.66, 0, 0, 0, 5.66]
+        self.assertEqual([self.bottom, self.right, self.top],
+                         cpp.get_extremes_from_arc(90, 270, coordinates))
 class TestGenerators(unittest.TestCase):
 
     def setUp(self) -> None:
