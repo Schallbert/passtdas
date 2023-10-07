@@ -12,7 +12,7 @@ class MoveType(Enum):
 def is_move(command):
     """Checks if input G-code line is a move (linear or arc) command.
     @:param command: The G-code input line
-    @:return A MoveType Enum according to the move type.."""
+    @:return A MoveType Enum according to the move type."""
     if command:
         if (command.find('G00') > -1 or (command.find('G0 ') > -1) or
             command.find('G01') > -1) or (command.find('G1 ') > -1):
@@ -101,6 +101,11 @@ def get_arc_degrees(coordinates):
     return round(degrees(rad), 0)
 
 def remove_duplicate(input_list, compare):
+    """Helper method that runs through a list of coordinates, only adding the compared input if it is not already
+    present. Not a very pythonic implementation, I know, but it was quick to write ;)
+    @:param input_list: the list to check for duplicates
+    @:param compare: the list to compare the input to
+    @:return the resulting list"""
     for item in input_list:
         duplicate = True
         for i in range(0, len(item)):
@@ -113,8 +118,6 @@ def remove_duplicate(input_list, compare):
 
 
 def get_extremes_from_arc(arc_end, arc_start, coordinates):
-    print([arc_start, arc_end])
-    print(coordinates)
     """Calculator function that returns minimum one but up to five possible extreme points from an arc definition.
     @:param arc_end: angle of the end of an arc
     @:param arc_start: angle of the start of an arc
@@ -134,7 +137,6 @@ def get_extremes_from_arc(arc_end, arc_start, coordinates):
         # crossing the 0° line (x-axis), handle overflow with nested if below
         arc_end += 360
     result = []
-    print('modifiedarc: ' + str([arc_start, arc_end]))
     for crossing_angle in range(0, 721, 90):
         if crossing_angle in range(int(arc_start), int(arc_end + 1)):
             i = int(crossing_angle / 90)

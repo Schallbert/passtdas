@@ -6,6 +6,8 @@ minimum values for its movements in `X` and `Y` direction.
 These values are then written to an output file that can be run as a `Jobfile`
 by the CNC application to check whether the CNC paths are within dimensions of the workpiece.
 
+It also supports coordinate shifts per `G92` command.
+
 ## Which problem does it solve?
 - You are unsure how to position your workpiece
 - You do not know if your milling paths fit on the workpiece
@@ -26,11 +28,11 @@ CNCpathPreview's parameter:
 It defaults to `25mm` if no or an erroneous value is given.
 
 ## Dialog
-Current Alpha version only supports *EdingCNC* syntax and thus uses a command called
-`DLGMSG` to ask the user whether the next extreme point shall be moved to.
+The Beta version 0.9 requires a `MSG` command to inform the user about the next 
+extreme value to pinpoint. Thus, the CNC interpreter needs to understand this command.
+I'm also using a pause command `M00` to have the user press the **Start** button for each pinpoint."
 
 ## Limitations
 Features to be added (soon):
-- Add `G02/G03 X Y R` syntax handling
 - Add installer
 - Add scratch parameter
