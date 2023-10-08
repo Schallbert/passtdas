@@ -278,14 +278,25 @@ def generate_output_file(target_filename, data, zsafety):
             f.write(get_rapidmove(['0', '0', str(zsafety)]))  # Go to X0Y0
 
             targets = ['Ymin', 'Xmin', 'Ymax', 'Xmax']
-            for text in targets:
-                value = get_extreme_value(text, data, zsafety)
-                f.write(get_coordinate_strings(text, value))
+            extremes = get_extreme_value(targets, data, zsafety)
+            for i in range(0, len(targets)):
+                f.write(get_command_strings(targets[i], extremes[i]))
 
             f.write('M30')
             f.close()
     except FileExistsError:
         click.echo('Error: Could not create file.', err=True)
+
+def get_extremes_text(targets, data, zsafety):
+    """Extracts a list of extreme values from data using targets string for filtering.
+    @:param targets: a list of strings with extreme value targets
+    @:param data: the move dataset
+    @:param zsafety: The safety height
+    @:return list of strings containing extreme coordinates"""
+    extremes = []
+    for text in targets:
+        extremes.append(get_extreme_value(text, data, zsafety))
+    return extremes
 
 
 def get_extreme_value(axis, data, zsafety):
@@ -325,7 +336,7 @@ def get_file_header(targetfilename):
             '(Project: ' + targetfilename + ')\n\n'
             'G90\n\n')
 
-def get_coordinate_strings(axis, coordinate):
+def get_command_strings(axis, coordinate):
     """Creates G-code message and pause command along with a target rapid move to head for the next extreme value
     @:param axis: The axis description
     @:param coordinage: The coordinates to be written

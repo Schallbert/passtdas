@@ -1,0 +1,233 @@
+#FILEVERSION 2
+#LAYER
+	active 0
+
+#PRINTVIEW
+	  xmin 100000000.000	 xmax 100000000.000
+	  ymin 100000000.000	 ymax 100000000.000
+	 scale    1.000	 true 0
+	pwidth 2970 pheight 2100
+	cx     0.0000000000 cy     0.0000000000 cz     0.0000000000
+	xx     1.0000000000 xy     0.0000000000 xz     0.0000000000
+	yx     0.0000000000 yy     1.0000000000 yz     0.0000000000
+
+#MODEL
+
+#BEGIN
+#PLANE    
+   ID             1111
+ name "XY-Ebene"
+# 	m_giudeID            1EC4A draftID            1EE90
+	cx     0.0000000000 cy     0.0000000000 cz     0.0000000000
+	xx     1.0000000000 xy     0.0000000000 xz     0.0000000000
+	yx     0.0000000000 yy     1.0000000000 yz     0.0000000000
+#BEGIN
+#GROUP    
+   ID            1EC23
+flags 001
+ name "Hilfsgeo"
+# 	type  0	topology  0
+#BEGIN
+#STRAIGHT 
+   ID            1EC24
+flags 111
+color C0C0C0FF
+ltype 001B
+ name "Gerade1"
+# 	x1 14660.0000000000 y1    60.0000000000
+	x2 -14460.0000000000 y2    60.0000000000
+#STRAIGHT 
+   ID            1EC25
+flags 111
+color C0C0C0FF
+ltype 001B
+ name "Gerade2"
+# 	x1    95.0000000000 y1 14620.0000000000
+	x2    95.0000000000 y2 -14500.0000000000
+#STRAIGHT 
+   ID            1EC26
+flags 111
+color C0C0C0FF
+ltype 001B
+ name "Gerade3"
+# 	x1 -14507.0347299897 y1     5.0000000000
+	x2 14612.9652700103 y2     5.0000000000
+#STRAIGHT 
+   ID            1EC27
+flags 111
+color C0C0C0FF
+ltype 001B
+ name "Gerade4"
+# 	x1 -14536.9116779606 y1   -50.0000000000
+	x2 14583.0883220394 y2   -50.0000000000
+#STRAIGHT 
+   ID            1EC28
+flags 111
+color C0C0C0FF
+ltype 001B
+ name "Gerade5"
+# 	x1   -50.0000000000 y1 14596.7399013458
+	x2   -50.0000000000 y2 -14523.2600986542
+#END
+#RECTANGLE
+   ID            1EC29
+flags 001
+ name "Rechteck1"
+#   	     cx     0.0000000000  cy     0.0000000000
+	  angle     0.0000000000 inv 0
+	 length   100.0000
+	  width   100.0000
+#CNCSET   
+   ID            1EC2A
+ name "Fr‰sen1"
+# 	 cx    -6.2262408999
+	 cy    47.3220292288
+	 feed_unit 2
+#CNC_TOOL_ROUGH
+    type 2
+    name "FSAC031.0200.08"
+     rot 1
+     dir 1
+     dia 2.000
+     rev 10000.00
+  feedxy 1000.00
+   feedz 1000.00
+process1 0
+process2 0
+#CNC_PATH
+     type 0
+    bstep 5.0000
+    mstart 0.5000
+     mode 1
+#CNC_ROUGH
+ stepxy -9999.000
+  angle -0.000
+  start 0.000
+  depth 1.000
+  stepz 1.000
+#CNCEND
+
+#BEGIN
+#GROUP    
+   ID            1EC2B
+ name "Gruppe1"
+# 	type  0	topology  1
+#BEGIN
+#LINE     
+   ID            1EC2C
+ name "Linie1"
+# 	x1   -50.0000000000 y1   -50.0000000000
+	x2   -50.0000000000 y2    40.0000000000
+#LINE     
+   ID            1EC2D
+ name "Linie2"
+# 	x1   -26.9526609392 y1    45.7898595728
+	x2    30.0000000000 y2    50.0000000000
+#ARC      
+   ID            1EC2E
+ name "Radius0"
+# 	cx   -40.0000000000 cy    40.0000000000
+	x1   -33.8449422502 y1    47.8813237528
+	len   22.3382387122 dir   1
+#LINE     
+   ID            1EC2F
+ name "Fase1"
+# 	x1    30.0000000000 y1    50.0000000000
+	x2    43.9442719100 y2    22.1114561800
+#LINE     
+   ID            1EC30
+ name "Linie3"
+# 	x1   -50.0000000000 y1   -50.0000000000
+	x2    30.5929336548 y2   -50.0000000000
+#ARC      
+   ID            1EC31
+ name "Bogen1"
+# 	cx    45.0000000000 cy   -45.0000000000
+	x1    40.2084257625 y1   -46.4285714286
+	len   20.6644278876 dir   1
+#LINE     
+   ID            1EC32
+ name "Linie4"
+# 	x1    45.0000000000 y1   -38.2917960674
+	x2    45.0000000000 y2    17.6393202250
+#LINE     
+   ID            1EC33
+ name "Linie5"
+# 	x1    38.2917960674 y1   -45.0000000000
+	x2    36.5090134379 y2   -45.0000000000
+#ARC      
+   ID            1EC34
+ name "Radius2"
+# 	cx    30.5929336548 cy   -46.0000000000
+	x1    34.5369868435 y1   -46.6666666667
+	len    5.6133929903 dir  -1
+#ARC      
+   ID            1EC35
+ name "Radius3"
+# 	cx   -27.6898844063 cy    55.7626476263
+	x1   -33.8449422502 y1    47.8813237528
+	len    7.3681684623 dir   1
+#ARC      
+   ID            1EC36
+ name "Radius5"
+# 	cx    38.2917960674 cy   -47.0000000000
+	x1    38.2917960674 y1   -45.0000000000
+	len    2.5620892507 dir  -1
+#ARC      
+   ID            1EC37
+ name "Radius6"
+# 	cx    36.5090134379 cy   -47.0000000000
+	x1    36.5090134379 y1   -45.0000000000
+	len    2.8066964952 dir   1
+#ARC      
+   ID            1EC38
+ name "Radius7"
+# 	cx    47.0000000000 cy   -38.2917960674
+	x1    46.4285714286 y1   -40.2084257625
+	len    2.5620892508 dir  -1
+#ARC      
+   ID            1EC39
+ name "Radius8"
+# 	cx    35.0000000000 cy    17.6393202250
+	x1    45.0000000000 y1    17.6393202250
+	len    4.6364760900 dir   1
+#END
+#END
+#GROUP    
+   ID            1EE90
+ name "Zeichnung"
+# 	type  0	topology  0
+#BEGIN
+#DIMDIST  
+   ID            1EE86
+ name "A-Maﬂ1"
+# 	    x1    50.0000 y1   -45.0000
+	    x2   -50.0000 y2    40.0000
+	    tx   -63.6379 ty    61.8841
+	  half 0
+	 align  4
+	   dir 0
+#	  misc    9
+	marker 1	   dir 2
+	  size 3.500	   gap 0.000	   ext 2.000
+	height 3.5
+	   acc -1
+	 value "100"
+#DIMDIST  
+   ID            1EE91
+ name "A-Maﬂ2"
+# 	    x1   -50.0000 y1   -50.0000
+	    x2    30.0000 y2    50.0000
+	    tx   -56.5367 ty    43.5392
+	  half 0
+	 align  8
+	   dir 1.5708
+#	  misc    9
+	marker 1	   dir 2
+	  size 3.500	   gap 0.000	   ext 2.000
+	height 3.5
+	   acc -1
+	 value "100"
+#END
+#END
+#END

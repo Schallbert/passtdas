@@ -223,6 +223,6 @@ class TestGenerators(unittest.TestCase):
         axis = 'ymin'
         coordinate = ['1', '2', '3']
         expectedstring = 'MSG "PathPreview: Hit START to go to ymin: [\'1\', \'2\', \'3\']"\nM00\nG00 X1 Y2 Z3\n\n'
-        self.assertEqual(expectedstring, cpp.get_coordinate_strings(axis, coordinate))
+        self.assertEqual(expectedstring, cpp.get_command_strings(axis, coordinate))
 
 
