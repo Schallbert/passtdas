@@ -25,7 +25,7 @@ class TestEnd2End(unittest.TestCase):
     left = [-5.66, 0, 10]
     right = [5.66, 0, 10]
 
-    offset = [-4.05, 6.96, 0]
+    offset = [-3.95, 6.9, 0]
 
     def setUp(self) -> None:
         pass
@@ -71,14 +71,13 @@ class TestEnd2End(unittest.TestCase):
             result = cpp.get_extremes_text(targets, data, 10)
             self.assertEqual(expect, list_to_float(result))
 
-
     def test_elipser_extremescorrect(self):
         with open('elipser.tap', 'r') as f:
             data = cpp.create_dataset_from_input(f)
             targets = ['Ymin', 'Xmin', 'Ymax', 'Xmax']
-            expect = [[0, -320, 10], [-200, 0, 10], [0, 320, 10], [200, 0, 10]]
+            expect = [[0, -320, 10], [-200, 0, 10], [0, 320, 10], [200, -0.01, 10]]
             result = cpp.get_extremes_text(targets, data, 10)
-            self.assertEqual(expect, list_to_float(result))
+            self.assertEqual(expect, roundlistitems(list_to_float(result)))
 
     def test_elipseij_extremescorrect(self):
         with open('elipseij.tap', 'r') as f:

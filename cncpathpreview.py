@@ -176,22 +176,23 @@ def handle_arc_move_r(coordinates, previous_coordinates, move_type):
     #  special case handling where atan is not defined or where signedness is unclear
 
     if p1p2_distance_y == 0:
-        p1p2_90degslope = 10000
         cosinus = 0
         sinus = 1
-        if p1p2_distance_x < 0:
-            p1p2_90degslope *= -1
+        if p1p2_distance_x > 0:
+            sinus *= -1
     else:
         p1p2_90degslope = -(p1p2_distance_x / p1p2_distance_y)
         cosinus = cos(atan(p1p2_90degslope))
         sinus = sin(atan(p1p2_90degslope))
-    #  handle cosinus shift by 180° for negative Y
-    if previous_coordinates[1] < 0 or coordinates[1] < 0:
+    #  handle quadrant changes by 180° for negative coordinates
+    print('cosbeforecorrection: ' + str(cosinus))
+    if p1p2_midpoint_x < 0:
         cosinus *= -1
         sinus *= -1
 
     arc_height = coordinates[5] - sqrt(coordinates[5] ** 2 - ((p1p2_distance / 2) ** 2))
     print('midpoint: ' + str([p1p2_midpoint_x, p1p2_midpoint_y]))
+    print('p1p2distance: ' + str([p1p2_distance_x, p1p2_distance_y]))
     coordinates[3] = p1p2_midpoint_x - cosinus * (coordinates[5] - arc_height)
     coordinates[4] = p1p2_midpoint_y - sinus * (coordinates[5] - arc_height)
     previous_coordinates = fill_previous_coordinates(coordinates, previous_coordinates)
