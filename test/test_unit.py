@@ -1,6 +1,15 @@
 import unittest
 import cncpathpreview as cpp
 
+def roundlistitems(inputlist):
+    rounded = []
+    for l in inputlist:
+        sublist = []
+        for i in l:
+            sublist.append(round(i, 2))
+        rounded.append(sublist)
+    return rounded
+
 class TestParsers(unittest.TestCase):
     def setUp(self):
         pass

@@ -118,6 +118,8 @@ def remove_duplicate(input_list, compare):
 
 
 def get_extremes_from_arc(arc_end, arc_start, coordinates):
+    print([arc_start, arc_end])
+    print(coordinates)
     """Calculator function that returns minimum one but up to five possible extreme points from an arc definition.
     @:param arc_end: angle of the end of an arc
     @:param arc_start: angle of the start of an arc
@@ -143,6 +145,7 @@ def get_extremes_from_arc(arc_end, arc_start, coordinates):
             if i > 3:
                 i -= 4
             result.append(extremevalue_order[i])
+    print(result)
     return remove_duplicate(result, xyz)
 
 def handle_coordinate_shift(line, shift):
@@ -185,9 +188,11 @@ def handle_arc_move_r(coordinates, previous_coordinates, move_type):
         cosinus *= -1
 
     arc_height = coordinates[5] - sqrt(coordinates[5] ** 2 - ((p1p2_distance / 2) ** 2))
+    print('midpoint: ' + str([p1p2_midpoint_x, p1p2_midpoint_y]))
     coordinates[3] = p1p2_midpoint_x - cosinus * (coordinates[5] - arc_height)
     coordinates[4] = p1p2_midpoint_y + p1p2_90degslope * (coordinates[3] - p1p2_midpoint_x)
     previous_coordinates = fill_previous_coordinates(coordinates, previous_coordinates)
+    print('cos: ' + str(cosinus))
 
     if move_type == MoveType.ARC_CLOCKWISE:
         arc_start = get_arc_degrees(coordinates)
@@ -239,7 +244,7 @@ def create_dataset_from_input(file):
     with file as f:
         lines = f.readlines()
 
-        previous_coordinates = [0, 0, 0]
+        previous_coordinates = [None, None, None]
         shift = [0, 0, 0]
         for line in lines:
             line = line.strip()
@@ -250,6 +255,8 @@ def create_dataset_from_input(file):
                     click.echo(f'Found coordinate shift: X' + str(shift[0]) + ', Y' + str(shift[1]) + ' Z' + str(shift[2]))
                 continue
             coordinates = fill_coordinates(parse_coordinates(line), previous_coordinates, shift)
+            if coordinates[0] is None or coordinates[1] is None:
+                continue
             if move_type == MoveType.LINEAR:
                 data.append([coordinates[0], coordinates[1], coordinates[2]])
             else:
