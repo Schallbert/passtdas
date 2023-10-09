@@ -1,6 +1,6 @@
 from enum import Enum
 import click
-from math import sqrt, acos, cos, atan, pi, degrees, isclose
+from math import sqrt, acos, cos, sin, atan, pi, degrees, isclose
 
 class MoveType(Enum):
     NONE = 0
@@ -178,19 +178,22 @@ def handle_arc_move_r(coordinates, previous_coordinates, move_type):
     if p1p2_distance_y == 0:
         p1p2_90degslope = 10000
         cosinus = 0
+        sinus = 1
         if p1p2_distance_x < 0:
             p1p2_90degslope *= -1
     else:
         p1p2_90degslope = -(p1p2_distance_x / p1p2_distance_y)
         cosinus = cos(atan(p1p2_90degslope))
+        sinus = sin(atan(p1p2_90degslope))
     #  handle cosinus shift by 180° for negative Y
     if previous_coordinates[1] < 0 or coordinates[1] < 0:
         cosinus *= -1
+        sinus *= -1
 
     arc_height = coordinates[5] - sqrt(coordinates[5] ** 2 - ((p1p2_distance / 2) ** 2))
     print('midpoint: ' + str([p1p2_midpoint_x, p1p2_midpoint_y]))
     coordinates[3] = p1p2_midpoint_x - cosinus * (coordinates[5] - arc_height)
-    coordinates[4] = p1p2_midpoint_y + p1p2_90degslope * (coordinates[3] - p1p2_midpoint_x)
+    coordinates[4] = p1p2_midpoint_y - sinus * (coordinates[5] - arc_height)
     previous_coordinates = fill_previous_coordinates(coordinates, previous_coordinates)
     print('cos: ' + str(cosinus))
 
