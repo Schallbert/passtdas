@@ -30,24 +30,41 @@ class TestEnd2End(unittest.TestCase):
     def setUp(self) -> None:
         pass
 
-    def test_arcr_extremescorrect(self):
-        with open('arcr.tap', 'r') as f:
+#  ARC tests clockwise, counterclockwise, varying origin, definition per radius (r) and per offset (ij)
+    def test_arcg03r_extremescorrect(self):
+        with open('arcg03r.tap', 'r') as f:
             data = cpp.create_dataset_from_input(f)
             targets = ['Ymin', 'Xmin', 'Ymax', 'Xmax']
             expect = [self.bottom, self.left, self.top, self.right]
             result = cpp.get_extremes_text(targets, data, 10)
             self.assertEqual(expect, list_to_float(result))
 
-    def test_arcij_extremescorrect(self):
-        with open('arcij.tap', 'r') as f:
+    def test_arcg02r_extremescorrect(self):
+        with open('arcg02r.tap', 'r') as f:
+            data = cpp.create_dataset_from_input(f)
+            targets = ['Ymin', 'Xmin', 'Ymax', 'Xmax']
+            expect = [self.bottom, self.left, self.top, self.right]
+            result = cpp.get_extremes_text(targets, data, 10)
+            self.assertEqual(expect, list_to_float(result))
+
+    def test_arcg02ij_extremescorrect(self):
+        with open('arcg02ij.tap', 'r') as f:
             data = cpp.create_dataset_from_input(f)
             targets = ['Ymin', 'Xmin', 'Ymax', 'Xmax']
             expect = [self.bottom, self.left, self.top, self.right]
             result = cpp.get_extremes_text(targets, data, 10)
             self.assertEqual(expect,list_to_float(result))
 
-    def test_arcoffsetr_extremescorrect(self):
-        with open('arcoffsetr.tap', 'r') as f:
+    def test_arcg03ij_extremescorrect(self):
+        with open('arcg03ij.tap', 'r') as f:
+            data = cpp.create_dataset_from_input(f)
+            targets = ['Ymin', 'Xmin', 'Ymax', 'Xmax']
+            expect = [self.bottom, self.left, self.top, self.right]
+            result = cpp.get_extremes_text(targets, data, 10)
+            self.assertEqual(expect,list_to_float(result))
+
+    def test_arcoffsetg03r_extremescorrect(self):
+        with open('arcoffsetg03r.tap', 'r') as f:
             data = cpp.create_dataset_from_input(f)
             targets = ['Ymin', 'Xmin', 'Ymax', 'Xmax']
             expect = roundlistitems([list(map(add, self.offset, self.bottom)), list(map(add, self.offset, self.left)),
@@ -55,13 +72,62 @@ class TestEnd2End(unittest.TestCase):
             result = cpp.get_extremes_text(targets, data, 10)
             self.assertEqual(expect, list_to_float(result))
 
-    def test_arcoffsetij_extremescorrect(self):
-        with open('arcoffsetij.tap', 'r') as f:
+    def test_arcoffsetg02r_extremescorrect(self):
+        with open('arcoffsetg02r.tap', 'r') as f:
+            data = cpp.create_dataset_from_input(f)
+            targets = ['Ymin', 'Xmin', 'Ymax', 'Xmax']
+            expect = roundlistitems([list(map(add, self.offset, self.bottom)), list(map(add, self.offset, self.left)),
+                      list(map(add, self.offset, self.top)), list(map(add, self.offset, self.right))])
+            result = cpp.get_extremes_text(targets, data, 10)
+            self.assertEqual(expect, list_to_float(result))
+
+    def test_arcoffsetg03ij_extremescorrect(self):
+        with open('arcoffsetg03ij.tap', 'r') as f:
             data = cpp.create_dataset_from_input(f)
             targets = ['Ymin', 'Xmin', 'Ymax', 'Xmax']
             expect = [[-4, 1.27, 10], [-9.66, 6.93, 10], [-4, 12.59, 10], [1.66, 6.93, 10]]
             result = cpp.get_extremes_text(targets, data, 10)
             self.assertEqual(expect, list_to_float(result))
+
+    def test_arcoffsetg02ij_extremescorrect(self):
+        with open('arcoffsetg02ij.tap', 'r') as f:
+            data = cpp.create_dataset_from_input(f)
+            targets = ['Ymin', 'Xmin', 'Ymax', 'Xmax']
+            expect = [[-4, 1.27, 10], [-9.66, 6.93, 10], [-4, 12.59, 10], [1.66, 6.93, 10]]
+            result = cpp.get_extremes_text(targets, data, 10)
+            self.assertEqual(expect, list_to_float(result))
+
+    def test_elipseg03r_extremescorrect(self):
+        with open('elipseg03r.tap', 'r') as f:
+            data = cpp.create_dataset_from_input(f)
+            targets = ['Ymin', 'Xmin', 'Ymax', 'Xmax']
+            expect = [[0, -320, 10], [-200, 0, 10], [0, 320, 10], [200, -0.01, 10]]
+            result = cpp.get_extremes_text(targets, data, 10)
+            self.assertEqual(expect, roundlistitems(list_to_float(result)))
+
+    def test_elipseg02r_extremescorrect(self):
+        with open('elipseg02r.tap', 'r') as f:
+            data = cpp.create_dataset_from_input(f)
+            targets = ['Ymin', 'Xmin', 'Ymax', 'Xmax']
+            expect = [[0, -320, 10], [-200, -0.01 , 10], [-0, 320, 10], [200, -0, 10]]
+            result = cpp.get_extremes_text(targets, data, 10)
+            self.assertEqual(expect, roundlistitems(list_to_float(result)))
+
+    def test_elipseg03ij_extremescorrect(self):
+        with open('elipseg03ij.tap', 'r') as f:
+            data = cpp.create_dataset_from_input(f)
+            targets = ['Ymin', 'Xmin', 'Ymax', 'Xmax']
+            expect = [[0.02, -320, 10], [-200, 0.02, 10], [-0.02, 320, 10], [200, -0.02, 10]]
+            result = cpp.get_extremes_text(targets, data, 10)
+            self.assertEqual(expect, roundlistitems(list_to_float(result)))
+
+    def test_elipseg02ij_extremescorrect(self):
+        with open('elipseg02ij.tap', 'r') as f:
+            data = cpp.create_dataset_from_input(f)
+            targets = ['Ymin', 'Xmin', 'Ymax', 'Xmax']
+            expect = [[0.02, -320, 10], [-200, 0.02, 10], [-0.02, 320, 10], [200, -0.02, 10]]
+            result = cpp.get_extremes_text(targets, data, 10)
+            self.assertEqual(expect, roundlistitems(list_to_float(result)))
 
     def test_rectangle_extremescorrect(self):
         with open('rectangle.tap', 'r') as f:
@@ -71,24 +137,48 @@ class TestEnd2End(unittest.TestCase):
             result = cpp.get_extremes_text(targets, data, 10)
             self.assertEqual(expect, list_to_float(result))
 
-    def test_elipser_extremescorrect(self):
-        with open('elipser.tap', 'r') as f:
+    def test_elipseg03r_extremescorrect(self):
+        with open('elipseg03r.tap', 'r') as f:
             data = cpp.create_dataset_from_input(f)
             targets = ['Ymin', 'Xmin', 'Ymax', 'Xmax']
             expect = [[0, -320, 10], [-200, 0, 10], [0, 320, 10], [200, -0.01, 10]]
             result = cpp.get_extremes_text(targets, data, 10)
             self.assertEqual(expect, roundlistitems(list_to_float(result)))
 
-    def test_elipseij_extremescorrect(self):
-        with open('elipseij.tap', 'r') as f:
+    def test_elipseg02r_extremescorrect(self):
+        with open('elipseg02r.tap', 'r') as f:
             data = cpp.create_dataset_from_input(f)
             targets = ['Ymin', 'Xmin', 'Ymax', 'Xmax']
-            expect = [[0.02, -320.002, 10], [-200.003, 0.02, 10], [-0.02, 320.002, 10], [200.003, -0.02, 10]]
+            expect = [[0, -320, 10], [-200, -0.01 , 10], [-0, 320, 10], [200, -0, 10]]
+            result = cpp.get_extremes_text(targets, data, 10)
+            self.assertEqual(expect, roundlistitems(list_to_float(result)))
+
+    def test_elipseg03ij_extremescorrect(self):
+        with open('elipseg03ij.tap', 'r') as f:
+            data = cpp.create_dataset_from_input(f)
+            targets = ['Ymin', 'Xmin', 'Ymax', 'Xmax']
+            expect = [[0.02, -320, 10], [-200, 0.02, 10], [-0.02, 320, 10], [200, -0.02, 10]]
+            result = cpp.get_extremes_text(targets, data, 10)
+            self.assertEqual(expect, roundlistitems(list_to_float(result)))
+
+    def test_elipseg02ij_extremescorrect(self):
+        with open('elipseg02ij.tap', 'r') as f:
+            data = cpp.create_dataset_from_input(f)
+            targets = ['Ymin', 'Xmin', 'Ymax', 'Xmax']
+            expect = [[0.02, -320, 10], [-200, 0.02, 10], [-0.02, 320, 10], [200, -0.02, 10]]
+            result = cpp.get_extremes_text(targets, data, 10)
+            self.assertEqual(expect, roundlistitems(list_to_float(result)))
+
+    def test_irregularshapeij_extremescorrect(self):
+        with open('irregularshapeij.tap', 'r') as f:
+            data = cpp.create_dataset_from_input(f)
+            targets = ['Ymin', 'Xmin', 'Ymax', 'Xmax']
+            expect = [[30.59, -50, 10], [-50, -50, 10], [-40, 50, 10], [50, -45, 10]]
             result = cpp.get_extremes_text(targets, data, 10)
             self.assertEqual(expect, list_to_float(result))
 
-    def test_irregularshape_extremescorrect(self):
-        with open('cncpathpreview_testcad.tap', 'r') as f:
+    def test_irregularshaper_extremescorrect(self):
+        with open('irregularshaper.tap', 'r') as f:
             data = cpp.create_dataset_from_input(f)
             targets = ['Ymin', 'Xmin', 'Ymax', 'Xmax']
             expect = [[30.59, -50, 10], [-50, -50, 10], [-40, 50, 10], [50, -45, 10]]

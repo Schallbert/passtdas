@@ -63,10 +63,17 @@ class TestIntegration(unittest.TestCase):
         self.assertEqual(expected, roundlistitems(actual))
 
     def test_handlearcmover_anticlockpasses270deg_ok(self):
-        previous_coordinates = [-9.814, -319.614, 0]  # 95°
-        coordinates = [9.814, -319.614, 0, None, None, 125.003]  # 85°
+        previous_coordinates = [-9.814, -319.614, 0]  # 265°
+        coordinates = [9.814, -319.614, 0, None, None, 125.003]  # 275°
         expected = [[0, -320, 0], [9.81, -319.61, 0,]]
         actual = cpp.handle_arc_move_r(coordinates, previous_coordinates, cpp.MoveType.ARC_ANTICLOCK)
+        self.assertEqual(expected, roundlistitems(actual))
+
+    def test_handlearcmover_clockwisepasses270deg_ok(self):
+        previous_coordinates = [9.814, -319.614, 0]  # 275°
+        coordinates = [-9.814, -319.614, 0, None, None, 125.003]  # 265°
+        expected = [[0, -320, 0], [-9.81, -319.61, 0,]]
+        actual = cpp.handle_arc_move_r(coordinates, previous_coordinates, cpp.MoveType.ARC_CLOCKWISE)
         self.assertEqual(expected, roundlistitems(actual))
 
     def test_handlearcmover_anticlockoffsetpassesnoquadrant_lower_ok(self):
@@ -122,6 +129,13 @@ class TestIntegration(unittest.TestCase):
         previous_coordinates = [-4, 4, 0]  # 135°
         coordinates = [-4, -4, 0, None, None, 5.66]  # 225°
         expected = [self.bottom, self.right, self.top, [-4, -4, 0]]
+        actual = cpp.handle_arc_move_r(coordinates, previous_coordinates, cpp.MoveType.ARC_CLOCKWISE)
+        self.assertEqual(expected, roundlistitems(actual))
+
+    def test_handlearcmover_clockwisepasses270degquadrant_ok(self):
+        previous_coordinates = [4, -4, 0]  # 315°
+        coordinates = [-4, -4, 0, None, None, 5.66]  # 225°
+        expected = [self.bottom, [-4, -4, 0]]
         actual = cpp.handle_arc_move_r(coordinates, previous_coordinates, cpp.MoveType.ARC_CLOCKWISE)
         self.assertEqual(expected, roundlistitems(actual))
 
