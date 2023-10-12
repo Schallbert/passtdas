@@ -118,8 +118,6 @@ def remove_duplicate(input_list, compare):
 
 
 def get_extremes_from_arc(arc_end, arc_start, coordinates):
-    print([arc_start, arc_end])
-    print(coordinates)
     """Calculator function that returns minimum one but up to five possible extreme points from an arc definition.
     @:param arc_end: angle of the end of an arc
     @:param arc_start: angle of the start of an arc
@@ -173,30 +171,30 @@ def handle_arc_move_r(coordinates, previous_coordinates, move_type):
     p1p2_distance_y = coordinates[1] - previous_coordinates[1]
     p1p2_distance = sqrt(p1p2_distance_x ** 2 + p1p2_distance_y ** 2)
 
-    #  special case handling where atan is not defined or where signedness is unclear
-
+    #  special case handling where atan is not defined (90°, 270°)
     if p1p2_distance_y == 0:
         cosinus = 0
         sinus = 1
-        if p1p2_distance_x > 0:
-            sinus *= -1
     else:
-        p1p2_90degslope = -(p1p2_distance_x / p1p2_distance_y)
-        cosinus = cos(atan(p1p2_90degslope))
-        sinus = sin(atan(p1p2_90degslope))
-    #  handle quadrant changes by 180° for negative coordinates
-    print('cosbeforecorrection: ' + str(cosinus))
-    if p1p2_midpoint_x < 0:
-        cosinus *= -1
+        p1p2_90degslope = atan(p1p2_distance_x / p1p2_distance_y)
+        cosinus = abs(cos(p1p2_90degslope))
+        sinus = abs(sin(p1p2_90degslope))
+    #  handle quadrant changes
+    if ((p1p2_distance_x < 0 and move_type == MoveType.ARC_CLOCKWISE) or
+            (p1p2_distance_x > 0 and move_type == MoveType.ARC_ANTICLOCK)):
         sinus *= -1
+    if ((p1p2_distance_y > 0 and move_type == MoveType.ARC_CLOCKWISE) or
+     (p1p2_distance_y < 0 and move_type == MoveType.ARC_ANTICLOCK)):
+        cosinus *= -1
 
-    arc_height = coordinates[5] - sqrt(coordinates[5] ** 2 - ((p1p2_distance / 2) ** 2))
+    print('prevandcoord: ' + str([previous_coordinates, coordinates]))
+    print('cossin: ' + str([cosinus, sinus]))
     print('midpoint: ' + str([p1p2_midpoint_x, p1p2_midpoint_y]))
     print('p1p2distance: ' + str([p1p2_distance_x, p1p2_distance_y]))
-    coordinates[3] = p1p2_midpoint_x - cosinus * (coordinates[5] - arc_height)
-    coordinates[4] = p1p2_midpoint_y - sinus * (coordinates[5] - arc_height)
+    p1p2_distance_center =  sqrt(coordinates[5] ** 2 - ((p1p2_distance / 2) ** 2))
+    coordinates[3] = p1p2_midpoint_x - cosinus * p1p2_distance_center
+    coordinates[4] = p1p2_midpoint_y - sinus * p1p2_distance_center
     previous_coordinates = fill_previous_coordinates(coordinates, previous_coordinates)
-    print('cos: ' + str(cosinus))
 
     if move_type == MoveType.ARC_CLOCKWISE:
         arc_start = get_arc_degrees(coordinates)
@@ -205,6 +203,7 @@ def handle_arc_move_r(coordinates, previous_coordinates, move_type):
         arc_start = get_arc_degrees(previous_coordinates)
         arc_end = get_arc_degrees(coordinates)
 
+    print([arc_start, arc_end])
     return get_extremes_from_arc(arc_end, arc_start, coordinates)
 
 def handle_arc_move_ij(coordinates, previous_coordinates, move_type):
@@ -270,10 +269,8 @@ def create_dataset_from_input(file):
                 else:
                     #  arc move with given arc center coordinates
                     extreme_values = handle_arc_move_ij(coordinates, previous_coordinates, move_type)
-                if lines:
-                    data.extend(extreme_values)
-            if data:
-                previous_coordinates = data[-1]
+                data.extend(extreme_values)
+            previous_coordinates = coordinates
     return data
 
 def generate_output_file(target_filename, data, zsafety):
