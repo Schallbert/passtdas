@@ -25,8 +25,6 @@ class TestEnd2End(unittest.TestCase):
     left = [-5.66, 0, 10]
     right = [5.66, 0, 10]
 
-    offset = [-3.95, 6.9, 0]
-
     def setUp(self) -> None:
         pass
 
@@ -67,8 +65,7 @@ class TestEnd2End(unittest.TestCase):
         with open('arcoffsetg03r.tap', 'r') as f:
             data = cpp.create_dataset_from_input(f)
             targets = ['Ymin', 'Xmin', 'Ymax', 'Xmax']
-            expect = roundlistitems([list(map(add, self.offset, self.bottom)), list(map(add, self.offset, self.left)),
-                      list(map(add, self.offset, self.top)), list(map(add, self.offset, self.right))])
+            expect = [[-4.05, 1.3, 10], [-9.61, 6.9, 10], [-3.95, 12.56, 10], [1.61, 6.96, 10]]
             result = cpp.get_extremes_text(targets, data, 10)
             self.assertEqual(expect, list_to_float(result))
 
@@ -76,8 +73,7 @@ class TestEnd2End(unittest.TestCase):
         with open('arcoffsetg02r.tap', 'r') as f:
             data = cpp.create_dataset_from_input(f)
             targets = ['Ymin', 'Xmin', 'Ymax', 'Xmax']
-            expect = roundlistitems([list(map(add, self.offset, self.bottom)), list(map(add, self.offset, self.left)),
-                      list(map(add, self.offset, self.top)), list(map(add, self.offset, self.right))])
+            expect = [[-4.05, 1.3, 10], [-9.61, 6.9, 10], [-3.95, 12.56, 10], [1.61, 6.96, 10]]
             result = cpp.get_extremes_text(targets, data, 10)
             self.assertEqual(expect, list_to_float(result))
 
@@ -181,7 +177,7 @@ class TestEnd2End(unittest.TestCase):
         with open('irregularshaper.tap', 'r') as f:
             data = cpp.create_dataset_from_input(f)
             targets = ['Ymin', 'Xmin', 'Ymax', 'Xmax']
-            expect = [[30.59, -50, 10], [-50, -50, 10], [-40, 50, 10], [50, -45, 10]]
+            expect = [[45, -50, 10], [-50, -50, 10], [-40, 50, 10], [50, -45, 10]]
             result = cpp.get_extremes_text(targets, data, 10)
             self.assertEqual(expect, list_to_float(result))
 

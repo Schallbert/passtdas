@@ -89,7 +89,7 @@ def get_arc_degrees(coordinates):
     @:return arc's length in degrees"""
     if coordinates[5] <= 0:
         return 0
-    cosinus = round((coordinates[0] - coordinates[3]) / coordinates[5], 3)  # cos = deltax / radius
+    cosinus = (coordinates[0] - coordinates[3]) / coordinates[5]  # cos = deltax / radius
     if cosinus > 1:
         cosinus = 1
     elif cosinus < -1:
@@ -98,7 +98,7 @@ def get_arc_degrees(coordinates):
     if coordinates[1] < coordinates[4]:
         #  negative y, count from 360° backwards
         rad = 2 * pi - rad
-    return round(degrees(rad), 0)
+    return round(degrees(rad), 1)
 
 def remove_duplicate(input_list, compare):
     """Helper method that runs through a list of coordinates, only adding the compared input if it is not already
@@ -170,6 +170,7 @@ def handle_arc_move_r(coordinates, previous_coordinates, move_type):
     p1p2_distance_x = coordinates[0] - previous_coordinates[0]
     p1p2_distance_y = coordinates[1] - previous_coordinates[1]
     p1p2_distance = sqrt(p1p2_distance_x ** 2 + p1p2_distance_y ** 2)
+    p1p2_distance_center = sqrt(coordinates[5] ** 2 - ((p1p2_distance / 2) ** 2))
 
     #  special case handling where atan is not defined (90°, 270°)
     if p1p2_distance_y == 0:
@@ -179,7 +180,7 @@ def handle_arc_move_r(coordinates, previous_coordinates, move_type):
         p1p2_90degslope = atan(p1p2_distance_x / p1p2_distance_y)
         cosinus = abs(cos(p1p2_90degslope))
         sinus = abs(sin(p1p2_90degslope))
-    #  handle quadrant changes
+    #  handle quadrant changes (doesn't work with multiple quadrant moves yet :'(
     if ((p1p2_distance_x < 0 and move_type == MoveType.ARC_CLOCKWISE) or
             (p1p2_distance_x > 0 and move_type == MoveType.ARC_ANTICLOCK)):
         sinus *= -1
@@ -190,10 +191,10 @@ def handle_arc_move_r(coordinates, previous_coordinates, move_type):
     print('prevandcoord: ' + str([previous_coordinates, coordinates]))
     print('cossin: ' + str([cosinus, sinus]))
     print('midpoint: ' + str([p1p2_midpoint_x, p1p2_midpoint_y]))
-    print('p1p2distance: ' + str([p1p2_distance_x, p1p2_distance_y]))
-    p1p2_distance_center =  sqrt(coordinates[5] ** 2 - ((p1p2_distance / 2) ** 2))
+    print('p1p2distance: ' + str([p1p2_distance_x, p1p2_distance_y, p1p2_distance_center]))
     coordinates[3] = p1p2_midpoint_x - cosinus * p1p2_distance_center
     coordinates[4] = p1p2_midpoint_y - sinus * p1p2_distance_center
+    print('arccenter: ' + str([coordinates[3], coordinates[4]]))
     previous_coordinates = fill_previous_coordinates(coordinates, previous_coordinates)
 
     if move_type == MoveType.ARC_CLOCKWISE:
