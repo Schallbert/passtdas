@@ -1,3 +1,8 @@
+# Author: "Schallbert"
+# Created: 2023
+# Version: 0.9
+# License: GPL V3
+
 from enum import Enum
 import click
 from math import sqrt, acos, cos, sin, atan, pi, degrees, isclose
@@ -7,7 +12,6 @@ class MoveType(Enum):
     LINEAR = 1
     ARC_CLOCKWISE = 2
     ARC_ANTICLOCK = 3
-
 
 def is_move(command):
     """Checks if input G-code line is a move (linear or arc) command.
