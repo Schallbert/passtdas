@@ -6,10 +6,8 @@ minimum values for its movements in `X` and `Y` direction.
 These values are then written to an output file that can be run as a `Jobfile`
 by the CNC application to check whether the CNC paths are within dimensions of the workpiece.
 
-It also supports coordinate shifts per `G92` command.
-
 ## Which problem does it solve?
-- You are unsure how to position your workpiece
+- You are unsure where to position your workpiece
 - You do not know if your milling paths fit on the workpiece
 
 ## Features
@@ -35,4 +33,3 @@ I'm also using a pause command `M00` to have the user press the **Start** button
 ## Limitations
 Features to be added (soon):
 - Add installer
-- Add scratch parameter

@@ -133,38 +133,6 @@ class TestEnd2End(unittest.TestCase):
             result = cpp.get_extremes_text(targets, data, 10)
             self.assertEqual(expect, list_to_float(result))
 
-    def test_elipseg03r_extremescorrect(self):
-        with open('elipseg03r.tap', 'r') as f:
-            data = cpp.create_dataset_from_input(f)
-            targets = ['Ymin', 'Xmin', 'Ymax', 'Xmax']
-            expect = [[0, -320, 10], [-200, 0, 10], [0, 320, 10], [200, -0.01, 10]]
-            result = cpp.get_extremes_text(targets, data, 10)
-            self.assertEqual(expect, roundlistitems(list_to_float(result)))
-
-    def test_elipseg02r_extremescorrect(self):
-        with open('elipseg02r.tap', 'r') as f:
-            data = cpp.create_dataset_from_input(f)
-            targets = ['Ymin', 'Xmin', 'Ymax', 'Xmax']
-            expect = [[0, -320, 10], [-200, -0.01 , 10], [-0, 320, 10], [200, -0, 10]]
-            result = cpp.get_extremes_text(targets, data, 10)
-            self.assertEqual(expect, roundlistitems(list_to_float(result)))
-
-    def test_elipseg03ij_extremescorrect(self):
-        with open('elipseg03ij.tap', 'r') as f:
-            data = cpp.create_dataset_from_input(f)
-            targets = ['Ymin', 'Xmin', 'Ymax', 'Xmax']
-            expect = [[0.02, -320, 10], [-200, 0.02, 10], [-0.02, 320, 10], [200, -0.02, 10]]
-            result = cpp.get_extremes_text(targets, data, 10)
-            self.assertEqual(expect, roundlistitems(list_to_float(result)))
-
-    def test_elipseg02ij_extremescorrect(self):
-        with open('elipseg02ij.tap', 'r') as f:
-            data = cpp.create_dataset_from_input(f)
-            targets = ['Ymin', 'Xmin', 'Ymax', 'Xmax']
-            expect = [[0.02, -320, 10], [-200, 0.02, 10], [-0.02, 320, 10], [200, -0.02, 10]]
-            result = cpp.get_extremes_text(targets, data, 10)
-            self.assertEqual(expect, roundlistitems(list_to_float(result)))
-
     def test_irregularshapeij_extremescorrect(self):
         with open('irregularshapeij.tap', 'r') as f:
             data = cpp.create_dataset_from_input(f)

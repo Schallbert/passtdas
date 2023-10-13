@@ -156,6 +156,7 @@ def handle_coordinate_shift(line, shift):
     return shift
 
 def get_arc_angles(coordinates, previous_coordinates, move_type):
+    """Simple determination of start and end angle of an arc."""
     if move_type == MoveType.ARC_CLOCKWISE:
         arc_start = get_arc_degrees(coordinates)
         arc_end = get_arc_degrees(previous_coordinates)
@@ -226,7 +227,6 @@ def fill_previous_coordinates(coordinates, previous_coordinates):
     otherarcpoint[4] = coordinates[4]
     otherarcpoint[5] = coordinates[5]
     return otherarcpoint
-
 
 def create_dataset_from_input(file):
     """Reads a G-code input file and generates coordinate sets for every move command.
