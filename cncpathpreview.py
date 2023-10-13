@@ -1,12 +1,13 @@
-# Author: "Schallbert"
-# Created: 2023
-# Version: 0.9
-# License: GPL V3
 
 from enum import Enum
 import click
 from os import path
 from math import sqrt, acos, cos, sin, atan, pi, degrees, isclose
+
+# Author: "Schallbert"
+# Created: 2023
+VERSION = '0.9'
+# License: GPL V3
 
 class MoveType(Enum):
     NONE = 0
@@ -333,10 +334,11 @@ def get_file_header(targetfilename):
     @:param targetfilename: String that defines the targeted output file
     @:return a String object"""
     return ('(CNCPathPreview by Schallbert, 2023)\n'
-            '(Release: 0.9)\n'
+            '(Version: ' + VERSION + ')\n'
             '(File output is supplied without liability.)\n'
             '(Output paths must be checked for correctness before usage.)\n\n'
-            '(Project: ' + targetfilename + ')\n\n'
+            '(Project: ' + targetfilename + ')\n'
+            'MSG "cncPathPreview V' + VERSION + ' by Schallbert, 2023."\n\n'
             'G90\n\n')
 
 def get_command_strings(axis, coordinate):
