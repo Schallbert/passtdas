@@ -173,41 +173,41 @@ class TestAlgorithms(unittest.TestCase):
 
     def test_getextremesfromarc_arccrossesno90degpole_returnstargetxyz(self):
         coordinates = [4, 4, 0, 0, 0, 5.66]
-        self.assertEqual([[4, 4, 0]], cpp.get_extremes_from_arc(45, 35, coordinates))
+        self.assertEqual([[4, 4, 0]], cpp.get_extremes_from_arc([35, 45], coordinates))
 
     def test_getextremesfromarc_arccrossesone90degpole_returns90pole(self):
         coordinates = [4, 4, 0, 0, 0, 5.66]
-        self.assertEqual([self.top, [4, 4, 0]], cpp.get_extremes_from_arc(135, 35, coordinates))
+        self.assertEqual([self.top, [4, 4, 0]], cpp.get_extremes_from_arc([35, 135], coordinates))
 
     def test_getextremesfromarc_arccrossesthree90degpoles_returnsthreepoles(self):
         coordinates = [4, -4, 0, 0, 0, 5.66]
         self.assertEqual([self.top, self.left, self.bottom, [4, -4, 0]],
-                         cpp.get_extremes_from_arc(300, 35, coordinates))
+                         cpp.get_extremes_from_arc([35, 300], coordinates))
 
     def test_getextremesfromarc_arccrossesall90degpoles_returnsfourpoles(self):
         coordinates = [4, 4, 0, 0, 0, 5.66]
         self.assertEqual([self.top, self.left,self.bottom, self.right, [4, 4, 0]],
-                         cpp.get_extremes_from_arc(20, 21, coordinates))
+                         cpp.get_extremes_from_arc([21, 20], coordinates))
 
     def test_getextremesfromarc_0to180_returnsthreepoles(self):
         coordinates = [-5.66, 0, 0, 0, 0, 5.66]
         self.assertEqual([self.right, self.top, self.left],
-                         cpp.get_extremes_from_arc(180, 0, coordinates))
+                         cpp.get_extremes_from_arc([0, 180], coordinates))
 
     def test_getextremesfromarc_90to270_returnsthreepoles(self):
         coordinates = [0, -5.66, 0, 0, 0, 5.66]
         self.assertEqual([self.top, self.left, self.bottom],
-                         cpp.get_extremes_from_arc(270, 90, coordinates))
+                         cpp.get_extremes_from_arc([90, 270], coordinates))
 
     def test_getextremesfromarc_180to0_returnsthreepoles(self):
         coordinates = [5.66, 0, 0, 0, 0, 5.66]
         self.assertEqual([self.left, self.bottom, self.right],
-                         cpp.get_extremes_from_arc(0, 180, coordinates))
+                         cpp.get_extremes_from_arc([180, 0], coordinates))
 
     def test_getextremesfromarc_270to90_returnsthreepoles(self):
         coordinates = [0, 5.66, 0, 0, 0, 5.66]
         self.assertEqual([self.bottom, self.right, self.top],
-                         cpp.get_extremes_from_arc(90, 270, coordinates))
+                         cpp.get_extremes_from_arc([270, 90], coordinates))
 class TestGenerators(unittest.TestCase):
 
     def setUp(self) -> None:

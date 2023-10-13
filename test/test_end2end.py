@@ -181,7 +181,6 @@ class TestEnd2End(unittest.TestCase):
             result = cpp.get_extremes_text(targets, data, 10)
             self.assertEqual(expect, list_to_float(result))
 
-    @unittest.skip
     def test_hugefilecoordinateshiftij_extremescorrect(self):
         with open('hugefilecoordinateshift.tap', 'r') as f:
             data = cpp.create_dataset_from_input(f)
