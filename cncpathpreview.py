@@ -5,6 +5,7 @@
 
 from enum import Enum
 import click
+from os import path, sep
 from math import sqrt, acos, cos, sin, atan, pi, degrees, isclose
 
 class MoveType(Enum):
@@ -372,14 +373,15 @@ def convert_input_zsafety(zsafety):
 def path_preview(file, zsafety):
     """A small command-line application that takes a G-code file and traces dimensions of the cutting paths.
     Its output is another G-code file to check if the workpiece fits the planned paths."""
-    filename = file.name.split('.')
-    target_filename = filename[0] + '_pathpreview.' + filename[1]
+    target_path = path.dirname(file.name)
+    target_filename = 'pathpreview_' + path.basename(file.name)
+    print(str(path.join(target_path, target_filename)))
 
     data = create_dataset_from_input(file)
     if not data:
         click.echo('Error: Could not find G-code move commands in source file.', err=True)
     else:
-        generate_output_file(target_filename, data, convert_input_zsafety(zsafety))
+        generate_output_file(path.join(target_path, target_filename), data, convert_input_zsafety(zsafety))
 
 if __name__ == "__main__":
     path_preview()

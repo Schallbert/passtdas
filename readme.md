@@ -30,6 +30,9 @@ The Beta version 0.9 requires a `MSG` command to inform the user about the next
 extreme value to pinpoint. Thus, the CNC interpreter needs to understand this command.
 I'm also using a pause command `M00` to have the user press the **Start** button for each pinpoint."
 
-## Limitations
-Features to be added (soon):
-- Add installer
+## How to create and run an executable
+run `setup.py` in a shell using the following commands:
+- `python setup.py --quiet bdist_egg` This will create an eggfile that can just be installed using pip.
+- `.\venv\Scripts\Activate.ps1` Activates the virtual environment in your venv folder
+- `pip install --editable .` Installs the eggfile
+- `cncpathpreview "./test/arcg02ij.tap" -z 10` runs the program, just use your path.
