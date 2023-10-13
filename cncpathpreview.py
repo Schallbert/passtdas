@@ -5,7 +5,7 @@
 
 from enum import Enum
 import click
-from os import path, sep
+from os import path
 from math import sqrt, acos, cos, sin, atan, pi, degrees, isclose
 
 class MoveType(Enum):
@@ -275,12 +275,13 @@ def generate_output_file(target_filename, data, zsafety):
     @:param zsafety: the height on which the extreme coordinate values should be approached"""
     try:
         with open(target_filename, 'w') as f:
+            click.echo('Writing to target file: ' + target_filename, err=False)
             f.write(get_file_header(target_filename))
             f.write(get_extreme_value('Zmin', data, zsafety))  # Print Zmin
             f.write(get_rapidmove(['0', '0', str(zsafety)]))  # Go to X0Y0
 
             targets = ['Ymin', 'Xmin', 'Ymax', 'Xmax']
-            extremes = get_extreme_value(targets, data, zsafety)
+            extremes = get_extremes_text(targets, data, zsafety)
             for i in range(0, len(targets)):
                 f.write(get_command_strings(targets[i], extremes[i]))
 
@@ -375,7 +376,6 @@ def path_preview(file, zsafety):
     Its output is another G-code file to check if the workpiece fits the planned paths."""
     target_path = path.dirname(file.name)
     target_filename = 'pathpreview_' + path.basename(file.name)
-    print(str(path.join(target_path, target_filename)))
 
     data = create_dataset_from_input(file)
     if not data:

@@ -36,3 +36,31 @@ run `setup.py` in a shell using the following commands:
 - `.\venv\Scripts\Activate.ps1` Activates the virtual environment in your venv folder
 - `pip install --editable .` Installs the eggfile
 - `cncpathpreview "./test/arcg02ij.tap" -z 10` runs the program, just use your path.
+
+## Example
+
+This is how the file for a circle of `r=5.66`, `Pcenter(0|0)` G-code will look like:
+
+```ruby
+G90
+
+MSG "Zmin of this job: -1.0"
+G00 X0 Y0 Z10.0
+MSG "PathPreview: Hit START to go to Ymin: ['0.0', '-5.66', '10.0']"
+M00
+G00 X0.0 Y-5.66 Z10.0
+
+MSG "PathPreview: Hit START to go to Xmin: ['-5.66', '0.0', '10.0']"
+M00
+G00 X-5.66 Y0.0 Z10.0
+
+MSG "PathPreview: Hit START to go to Ymax: ['0.0', '5.66', '10.0']"
+M00
+G00 X0.0 Y5.66 Z10.0
+
+MSG "PathPreview: Hit START to go to Xmax: ['5.66', '0.0', '10.0']"
+M00
+G00 X5.66 Y0.0 Z10.0
+
+M30
+```
