@@ -1,0 +1,8 @@
+M06 T10 ;ThisIsAnEndmill
+
+G61
+G64 P0.1
+
+M05
+
+M30

@@ -40,7 +40,7 @@ def parse_coordinates(line):
     @:param line: a move command
     @:return a float value set."""
     values = line.split(' ')
-    coordinate = [None, None, None, None, None, None]
+    coordinate = [None, None, 0, None, None, None]
     for value in values:
         if value.find('X') > -1:
             coordinate[0] = float(value.strip('X '))
@@ -83,7 +83,7 @@ def get_min_by_column(data, column_index):
     @:param data: the input list
     @:param column_index: the column to find the max for
     @:return the line that contains the maximum value of a given column"""
-    return min(data, key=lambda x: x[column_index])
+    return min(data, key=lambda i: i[column_index])
 
 def get_arc_degrees(coordinates):
     """Calculates an arc's span from a given point on the arc, arc's center point and a radius
@@ -331,7 +331,7 @@ def get_file_header(targetfilename):
     @:param targetfilename: String that defines the targeted output file
     @:return a String object"""
     return ('(CNCPathPreview by Schallbert, 2023)\n'
-            '(Release: 0.8)\n'
+            '(Release: 0.9)\n'
             '(File output is supplied without liability.)\n'
             '(Output paths must be checked for correctness before usage.)\n\n'
             '(Project: ' + targetfilename + ')\n\n'
@@ -372,10 +372,14 @@ def convert_input_zsafety(zsafety):
 def path_preview(file, zsafety):
     """A small command-line application that takes a G-code file and traces dimensions of the cutting paths.
     Its output is another G-code file to check if the workpiece fits the planned paths."""
-    target_filename = 'PathPreview_' + file.name
+    filename = file.name.split('.')
+    target_filename = filename[0] + '_pathpreview.' + filename[1]
 
     data = create_dataset_from_input(file)
-    generate_output_file(target_filename, data, convert_input_zsafety(zsafety))
+    if not data:
+        click.echo('Error: Could not find G-code move commands in source file.', err=True)
+    else:
+        generate_output_file(target_filename, data, convert_input_zsafety(zsafety))
 
 if __name__ == "__main__":
     path_preview()

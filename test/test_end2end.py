@@ -156,3 +156,8 @@ class TestEnd2End(unittest.TestCase):
             expect = [[-79.1, -10.802, 10], [-280.833, 533.76, 10], [-109.93, 631.066, 10], [10.802, 145.35, 10]]
             result = cpp.get_extremes_text(targets, data, 10)
             self.assertEqual(expect, list_to_float(result))
+
+    def test_incompatiblefile_handlegracefully(self):
+        with open('misformulatedfile.txt', 'r') as f:
+            data = cpp.create_dataset_from_input(f)
+            self.assertEqual([], data)
