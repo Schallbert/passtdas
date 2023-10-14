@@ -1,5 +1,7 @@
 # cncPathPreview
-is a small command-line helper application written in Python that takes a G-code file,
+![Image: A symbolic image of what cncPathPreview does](/assets/cncpathpreview.png)
+
+CNCpathpreview is a small command-line helper application written in Python that takes a G-code file,
 reads its Move-commands `(G00, G01, G02, G03)` and determines maximum and
 minimum values for its movements in `X` and `Y` direction.
 
@@ -15,22 +17,21 @@ Detects "extreme values" of any given move command including arcs that have
 multiple possible values. Supports `G92` coordinate shift and takes them into account.
 
 ## Arguments
-CNCpathPreview only has one mandatory argument: The path of its input file.
-
-Example call: `cncPathPreview.py "path/to/my/jobfile.tap"`
+CNCpathPreview has no mandatory argument.
 
 ## Parameters
-CNCpathPreview's parameter:
-
-`--zsafety`: The safety height you want the machine to run to the XY extreme points.
-It defaults to `25mm` if no or an erroneous value is given.
+CNCpathPreview's parameters:
+1. `--file` or `-f`: The source file to be analyzed. This parameter is required.
+2. `--zsafety` or `-z` The safety height you want the machine to run to the XY extreme points.
+This parameter is optional. It defaults to `25mm` if no or an erroneous value is given.
 
 ## Dialog
-The Beta version 0.9 requires a `MSG` command to inform the user about the next 
-extreme value to pinpoint. Thus, the CNC interpreter needs to understand this command.
-I'm also using a pause command `M00` to have the user press the **Start** button for each pinpoint."
+The Beta version 0.93 requires a `MSG` command to inform the user about the next 
+extreme value to pinpoint. Thus, the CNC interpreter needs to understand that command.
+I'm also using a pause command `M00` to have the user press the **Start** button for each pinpoint.
 
 ## How to create and run an executable
+The application Python's supports **setuptools**.
 run `setup.py` in a shell using the following commands:
 - `python setup.py --quiet bdist_egg` This will create an eggfile that can just be installed using pip.
 - `.\venv\Scripts\Activate.ps1` Activates the virtual environment in your venv folder
@@ -38,9 +39,14 @@ run `setup.py` in a shell using the following commands:
 - `cncpathpreview "./test/arcg02ij.tap" -z 10` runs the program, just use your path.
 
 ## Example
+You can run the script from command line like this:
 
-This is how the file for a circle of `r=5.66`, `Pcenter(0|0)` G-code will look like:
+![Image: running cncPathPreview from command line](/assets/example_executefromconsole.jpg)
 
+Alternatively, you can deploy an executable and enter the parameters later:
+![Image: running cncPathPreview directly as an Application](/assets/example_executeasapp.jpg)
+
+This is how the output file for a circle of `r=5.66`, `Pcenter(0|0)` will look like:
 ```ruby
 G90
 
