@@ -1,4 +1,4 @@
-
+import sys
 from enum import Enum
 import click
 from os import path
@@ -276,7 +276,7 @@ def generate_output_file(target_filename, data, zsafety):
     @:param zsafety: the height on which the extreme coordinate values should be approached"""
     try:
         with open(target_filename, 'w') as f:
-            click.echo('Writing to target file: ' + target_filename, err=False)
+            click.echo('Writing to target file: ' + click.style(target_filename, fg="green"), err=False)
             f.write(get_file_header(target_filename))
             f.write(get_extreme_value('Zmin', data, zsafety))  # Print Zmin
             f.write(get_rapidmove(['0', '0', str(zsafety)]))  # Go to X0Y0
@@ -341,6 +341,16 @@ def get_file_header(targetfilename):
             'MSG "cncPathPreview V' + VERSION + ' by Schallbert, 2023."\n\n'
             'G90\n\n')
 
+def echo_boilerplate():
+    click.secho(message=\
+"CNC-Pfadvorschau V0.93\n\
+Autor: Schallbert\n\
+Distributor: technische Dienstleistungen Preusser\n\
+Copyright: 2023\n\
+Veroeffentlicht unter: GNU GPL V3\n\
+Blog: https://schallbert.de\n\
+WARNUNG: Ausgabe des Programms ohne Gewaehr!\n", fg='blue')
+
 def get_command_strings(axis, coordinate):
     """Creates G-code message and pause command along with a target rapid move to head for the next extreme value
     @:param axis: The axis description
@@ -368,8 +378,10 @@ def convert_input_zsafety(zsafety):
         zsafety = 25
     return zsafety
 
-@click.command()
-@click.argument("file", type=click.File(mode="r"))
+@click.command("Test")
+@click.option("-f", "--file", prompt="Enter source file path like so: <path/to/my/gcodefile.cnc>",
+              help="The file to analyze for CNC job area edge detection",
+              default=None, show_default=True, type=click.File(mode="r"), required=True )
 @click.option("-z", "--zsafety", prompt="Enter positive Z-safety height",
               help="Safety Z-height on which the CNC will move to targeted coordinates",
               default=25, show_default=True, type=float, required=False)
@@ -385,5 +397,14 @@ def path_preview(file, zsafety):
     else:
         generate_output_file(path.join(target_path, target_filename), data, convert_input_zsafety(zsafety))
 
+    click.confirm("Press any key to quit")
+
+# add pyinstaller hook for deployment
+if getattr(sys, 'frozen', False):
+    echo_boilerplate()
+    path_preview()
+
+# add run hook for IDE
 if __name__ == "__main__":
+    echo_boilerplate()
     path_preview()
