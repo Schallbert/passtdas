@@ -22,11 +22,15 @@ CNCpathPreview has no mandatory argument.
 ## Parameters
 CNCpathPreview's parameters:
 1. `--file` or `-f`: The source file to be analyzed. This parameter is required.
-2. `--zsafety` or `-z` The safety height you want the machine to run to the XY extreme points.
-This parameter is optional. It defaults to `25mm` if no or an erroneous value is given.
+2. `--zsafety` or `-s` The safety height you want the machine to run to the XY extreme points.
+3. `--zprobe` or `-p` The probe height the machine will go to at the extreme points to simplify manual adjustments
+of workpiece position.
+This Z parameters are optional. 
+
+The two optional parameters default to `zsafety=40mm` and `zprobe=15mm` if no or an erroneous value is given.
 
 ## Dialog
-The Beta version 0.93 requires a `MSG` command to inform the user about the next 
+The Beta version 0.9.4 requires a `MSG` command to inform the user about the next 
 extreme value to pinpoint. Thus, the CNC interpreter needs to understand that command.
 I'm also using a pause command `M00` to have the user press the **Start** button for each pinpoint.
 
@@ -46,27 +50,47 @@ You can run the script from command line like this:
 Alternatively, you can deploy an executable and enter the parameters later:
 ![Image: running cncPathPreview directly as an Application](/assets/example_executeasapp.jpg)
 
-This is how the output file for a circle of `r=5.66`, `Pcenter(0|0)` will look like:
+This is how the output file for a circle of `r=5.66`, `Pcenter(0|0)` will look like.
+The machine will start at XY0 and probe down to a given height. It will then pause using command `M00`.
+As soon as the user hits 'start', the machine will probe the job's extreme points starting with Y-.
+When complete, the machine will return to XY0 at safety height.
 ```ruby
 G90
 
 MSG "Zmin of this job: -1.0"
-G00 X0 Y0 Z10.0
-MSG "PathPreview: Hit START to go to Ymin: ['0.0', '-5.66', '10.0']"
-M00
-G00 X0.0 Y-5.66 Z10.0
+G00 Z40
+G00 X0 Y0
+G01 Z15 F1200
 
-MSG "PathPreview: Hit START to go to Xmin: ['-5.66', '0.0', '10.0']"
+MSG "PathPreview: Hit START to go to Ymin: ['0.0', '-5.66']"
 M00
-G00 X-5.66 Y0.0 Z10.0
+G00 Z40
+G00 X0.0 Y-5.66
+G01 Z15 F1200
 
-MSG "PathPreview: Hit START to go to Ymax: ['0.0', '5.66', '10.0']"
+MSG "PathPreview: Hit START to go to Xmin: ['-5.66', '0.0']"
 M00
-G00 X0.0 Y5.66 Z10.0
+G00 Z40
+G00 X-5.66 Y0.0
+G01 Z15 F1200
 
-MSG "PathPreview: Hit START to go to Xmax: ['5.66', '0.0', '10.0']"
+MSG "PathPreview: Hit START to go to Ymax: ['0.0', '5.66']"
 M00
-G00 X5.66 Y0.0 Z10.0
+G00 Z40
+G00 X0.0 Y5.66
+G01 Z15 F1200
+
+MSG "PathPreview: Hit START to go to Xmax: ['5.66', '0.0']"
+M00
+G00 Z40
+G00 X5.66 Y0.0
+G01 Z15 F1200
+
+MSG "PathPreview: Hit START to go to X0 Y0 Z40: ['0', '0']"
+M00
+G00 Z40
+G00 X0 Y0
+G01 Z40 F1200
 
 M30
 ```

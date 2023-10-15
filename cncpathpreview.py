@@ -273,7 +273,7 @@ def generate_output_file(target_filename, data, zinfo):
     @:param zinfo: a list containing zsafety and zprobe height on which the extreme coordinate values are approached"""
     try:
         with open(target_filename, 'w') as f:
-            click.echo('Writing to target file: ' + click.style(target_filename, fg="green"), err=False)
+            click.echo('Info: Writing to target file ' + click.style(target_filename, fg="green"), err=False)
             f.write(get_file_header(target_filename))
             f.write(get_extreme_value('Zmin', data))  # Print Zmin
             f.write(get_zxyzmove(['0', '0'], zinfo))  # Go to X0Y0
@@ -282,11 +282,11 @@ def generate_output_file(target_filename, data, zinfo):
             extremes = get_extremes_text(targets, data)
             for i in range(0, len(targets)):
                 f.write(get_command_strings(targets[i], extremes[i], zinfo))
-
+            f.write(get_command_strings('X0 Y0 Z' + zinfo[0], ['0', '0'], [zinfo[0], zinfo[0]]))  # back to X0Y0
             f.write('M30')
             f.close()
     except FileExistsError:
-        click.echo('Error: Could not create file.', err=True)
+        click.secho('Error: Could not create file.', err=True, fg="red")
 
 def get_extremes_text(targets, data):
     """Extracts a list of extreme values from data using targets string for filtering.
@@ -351,7 +351,7 @@ def get_command_strings(axis, coordinate, zinfo):
     @:return a String object"""
     return ('MSG "PathPreview: Hit START to go to ' + axis + ': ' + str(coordinate) + '"\n'
             + 'M00\n'
-            + get_zxyzmove(coordinate, zinfo) + '\n')
+            + get_zxyzmove(coordinate, zinfo))
 
 def get_zxyzmove(coordinate, zinfo):
     """Simple helper to build a rapid move command
@@ -359,18 +359,18 @@ def get_zxyzmove(coordinate, zinfo):
     @:return a String object"""
     return ('G00 Z' + zinfo[0] + '\n' +
             'G00 X' + coordinate[0] + ' Y' + coordinate[1] + '\n'
-            'G01 Z' + zinfo[1] + ' F1200' +'\n')
+            'G01 Z' + zinfo[1] + ' F1200' +'\n\n')
 
 def convert_int_unsigned(value):
     """Helper method that evaluates a user input and provides a default value on error
     @:param value: An integer value
     @:return the validated number as positive integer"""
     if value <= 0:
-        click.echo('Error: ' + str(value) + ' might lead to machine crash. Defaulting to Z=25.', err=True)
+        click.secho('Warning: ' + str(value) + ' might lead to machine crash. Defaulting to Z=40.', err=True, fg="yellow")
         value = 40
     return str(value)
 
-@click.command("Test")
+@click.command()
 @click.option("-f", "--file", prompt="Enter source file path like so: <path/to/my/gcodefile.cnc>",
               help="The file to analyze for CNC job area edge detection",
               default=None, show_default=True, type=click.File(mode="r"), required=True )
@@ -389,13 +389,13 @@ def path_preview(file, zsafety, zprobe):
 
     data = create_dataset_from_input(file)
     if not data:
-        click.echo('Error: Could not find G-code move commands in source file.', err=True)
+        click.secho('Error: Could not find G-code move commands in source file.', err=True, fg="red")
     else:
-        click.secho('Found G-code move commands in source file: ' + file.name, err=True, fg="green")
+        click.secho('Info: Successfully read G-code move commands in source file: ' + file.name, fg="green")
         generate_output_file(path.join(target_path, target_filename), data,
                              [convert_int_unsigned(zsafety), convert_int_unsigned(zprobe)])
 
-    click.confirm("Press <Return> to quit")
+    click.confirm("Press <Return> to quit", default=True)
 
 # add pyinstaller hook for deployment
 if getattr(sys, 'frozen', False):
