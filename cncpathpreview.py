@@ -6,7 +6,7 @@ from math import sqrt, acos, cos, sin, atan, pi, degrees, isclose
 
 # Author: "Schallbert"
 # Created: 2023
-VERSION = '0.9'
+VERSION = '0.9.4'
 # License: GPL V3
 
 class MoveType(Enum):
@@ -89,9 +89,7 @@ def get_min_by_column(data, column_index):
 
 def get_arc_degrees(coordinates):
     """Calculates an arc's span from a given point on the arc, arc's center point and a radius
-    @:param coordinates: the input vector
-    @:param arc_center: coordinates of the arc's center
-    @:param: arc radius: scalar indicating the arc's radius
+    @:param coordinates: the input coordinate list
     @:return arc's length in degrees"""
     if coordinates[5] <= 0:
         return 0
@@ -123,8 +121,7 @@ def remove_duplicate(input_list, compare):
 
 def get_extremes_from_arc(arc, coordinates):
     """Calculator function that returns minimum one but up to five possible extreme points from an arc definition.
-    @:param arc_end: angle of the end of an arc
-    @:param arc_start: angle of the start of an arc
+    @:param arc: list containing angles for arc_start and arc_end
     @:param coordinates : target xyz position, arc_center xy, arc radius
     @:return a list of xyz coordinates with arc's extreme values"""
     # min/max calculations needed later on
@@ -268,46 +265,44 @@ def create_dataset_from_input(file):
             previous_coordinates = coordinates
     return data
 
-def generate_output_file(target_filename, data, zsafety):
+def generate_output_file(target_filename, data, zinfo):
     """Creates a new G-code file and writes minimum and maximum coordinate values along with a dialog
     for the machine user to adjust workpiece position if necessary.
     @:param target_filename: the output filename
     @:param data: the input coordinate set
-    @:param zsafety: the height on which the extreme coordinate values should be approached"""
+    @:param zinfo: a list containing zsafety and zprobe height on which the extreme coordinate values are approached"""
     try:
         with open(target_filename, 'w') as f:
             click.echo('Writing to target file: ' + click.style(target_filename, fg="green"), err=False)
             f.write(get_file_header(target_filename))
-            f.write(get_extreme_value('Zmin', data, zsafety))  # Print Zmin
-            f.write(get_rapidmove(['0', '0', str(zsafety)]))  # Go to X0Y0
+            f.write(get_extreme_value('Zmin', data))  # Print Zmin
+            f.write(get_zxyzmove(['0', '0'], zinfo))  # Go to X0Y0
 
             targets = ['Ymin', 'Xmin', 'Ymax', 'Xmax']
-            extremes = get_extremes_text(targets, data, zsafety)
+            extremes = get_extremes_text(targets, data)
             for i in range(0, len(targets)):
-                f.write(get_command_strings(targets[i], extremes[i]))
+                f.write(get_command_strings(targets[i], extremes[i], zinfo))
 
             f.write('M30')
             f.close()
     except FileExistsError:
         click.echo('Error: Could not create file.', err=True)
 
-def get_extremes_text(targets, data, zsafety):
+def get_extremes_text(targets, data):
     """Extracts a list of extreme values from data using targets string for filtering.
     @:param targets: a list of strings with extreme value targets
     @:param data: the move dataset
-    @:param zsafety: The safety height
     @:return list of strings containing extreme coordinates"""
     extremes = []
-    for text in targets:
-        extremes.append(get_extreme_value(text, data, zsafety))
+    for axis in targets:
+        extremes.append(get_extreme_value(axis, data))
     return extremes
 
 
-def get_extreme_value(axis, data, zsafety):
+def get_extreme_value(axis, data):
     """Finds minimum and maximum values within a set of data for a given axis.
     @:param axis: A string defining axis and extreme value to find, e.g. `Xmin`
     @:param data: A list of lists, each entry containing XYZ coordinates
-    @:param zsafety: The target Z height with which the preview shall run
     @:return a string representing the coordinates of the requested extreme value"""
     if axis == "Zmin":
         zmin = str(round(get_min_by_column(data, 2)[2], 3))
@@ -323,9 +318,7 @@ def get_extreme_value(axis, data, zsafety):
         result = get_max_by_column(data, 1)
     elif axis == "Xmax":
         result = get_max_by_column(data, 0)
-    result[2] = zsafety
-    stringresult = [str(round(result[0], 3)), str(round(result[1], 3)), str(round(result[2], 3))]
-
+    stringresult = [str(round(result[0], 3)), str(round(result[1], 3))]
     click.echo(f'Found ' + axis + ' at coordinates ' + ' | '.join(stringresult), nl=True)
     return stringresult
 
@@ -336,14 +329,14 @@ def get_file_header(targetfilename):
     return ('(CNCPathPreview by Schallbert, 2023)\n'
             '(Version: ' + VERSION + ')\n'
             '(File output is supplied without liability.)\n'
-            '(Output paths must be checked for correctness before usage.)\n\n'
-            '(Project: ' + targetfilename + ')\n'
-            'MSG "cncPathPreview V' + VERSION + ' by Schallbert, 2023."\n\n'
+            '(Output paths must be checked for correctness before usage.)\n'
+            '(Make sure you measure Z0 of your workpiece BEFORE starting.)\n\n'
+            '(Source project: ' + targetfilename + ')\n\n'
             'G90\n\n')
 
 def echo_boilerplate():
     click.secho(message=\
-"CNC-Pfadvorschau V0.93\n\
+"CNC-Pfadvorschau V" + VERSION + "\n\
 Autor: Schallbert\n\
 Distributor: technische Dienstleistungen Preusser\n\
 Copyright: 2023\n\
@@ -351,41 +344,44 @@ Veroeffentlicht unter: GNU GPL V3\n\
 Blog: https://schallbert.de\n\
 WARNUNG: Ausgabe des Programms ohne Gewaehr!\n", fg='blue')
 
-def get_command_strings(axis, coordinate):
+def get_command_strings(axis, coordinate, zinfo):
     """Creates G-code message and pause command along with a target rapid move to head for the next extreme value
     @:param axis: The axis description
     @:param coordinage: The coordinates to be written
     @:return a String object"""
     return ('MSG "PathPreview: Hit START to go to ' + axis + ': ' + str(coordinate) + '"\n'
             + 'M00\n'
-            + get_rapidmove(coordinate) + '\n')
+            + get_zxyzmove(coordinate, zinfo) + '\n')
 
-def get_rapidmove(coordinate):
+def get_zxyzmove(coordinate, zinfo):
     """Simple helper to build a rapid move command
     @:param coordinate: input list of coordinate strings
     @:return a String object"""
-    return ('G00 X' + coordinate[0] +
-            ' Y' + coordinate[1] +
-            ' Z' + coordinate[2] +'\n')
+    return ('G00 Z' + zinfo[0] + '\n' +
+            'G00 X' + coordinate[0] + ' Y' + coordinate[1] + '\n'
+            'G01 Z' + zinfo[1] + ' F1200' +'\n')
 
-def convert_input_zsafety(zsafety):
+def convert_int_unsigned(value):
     """Helper method that evaluates a user input and provides a default value on error
-    @:param zsafety: A positive numeric value
-    @:return the validated number as integer"""
-    zsafety = round(zsafety, 0)
-    if zsafety <= 0:
-        click.echo('Error: Number invalid for safety height. Defaulting to Z=25.', err=True)
-        zsafety = 25
-    return zsafety
+    @:param value: An integer value
+    @:return the validated number as positive integer"""
+    if value <= 0:
+        click.echo('Error: ' + str(value) + ' might lead to machine crash. Defaulting to Z=25.', err=True)
+        value = 40
+    return str(value)
 
 @click.command("Test")
 @click.option("-f", "--file", prompt="Enter source file path like so: <path/to/my/gcodefile.cnc>",
               help="The file to analyze for CNC job area edge detection",
               default=None, show_default=True, type=click.File(mode="r"), required=True )
-@click.option("-z", "--zsafety", prompt="Enter positive Z-safety height",
+@click.option("-s", "--zsafety", prompt="Enter positive Z-safety height",
               help="Safety Z-height on which the CNC will move to targeted coordinates",
-              default=25, show_default=True, type=float, required=False)
-def path_preview(file, zsafety):
+              default=40, show_default=True, type=int, required=False)
+@click.option("-p", "--zprobe", prompt="Enter positive Z-probe height",
+              help="Probing Z-height to which the CNC will move when target XY coordinates are reached\
+               to simplify optical dimensions check",
+              default=15, show_default=True, type=int, required=False)
+def path_preview(file, zsafety, zprobe):
     """A small command-line application that takes a G-code file and traces dimensions of the cutting paths.
     Its output is another G-code file to check if the workpiece fits the planned paths."""
     target_path = path.dirname(file.name)
@@ -395,9 +391,11 @@ def path_preview(file, zsafety):
     if not data:
         click.echo('Error: Could not find G-code move commands in source file.', err=True)
     else:
-        generate_output_file(path.join(target_path, target_filename), data, convert_input_zsafety(zsafety))
+        click.secho('Found G-code move commands in source file: ' + file.name, err=True, fg="green")
+        generate_output_file(path.join(target_path, target_filename), data,
+                             [convert_int_unsigned(zsafety), convert_int_unsigned(zprobe)])
 
-    click.confirm("Press any key to quit")
+    click.confirm("Press <Return> to quit")
 
 # add pyinstaller hook for deployment
 if getattr(sys, 'frozen', False):
