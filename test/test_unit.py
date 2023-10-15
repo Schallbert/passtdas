@@ -60,7 +60,7 @@ class TestParsers(unittest.TestCase):
 
     def test_parsecoordinates_nonegiven_returns_fieldofnones(self):
         line = 'M05'
-        self.assertEqual([None, None, None, None, None, None], cpp.parse_coordinates(line))
+        self.assertEqual([None, None, 0, None, None, None], cpp.parse_coordinates(line))
 
     def test_parsecoordinates_linearmove_returns_xyz(self):
         line = 'G00 X10 Y20 Z30'
@@ -230,8 +230,8 @@ class TestGenerators(unittest.TestCase):
 
     def test_getcoordinatestring_returnscorrectoutput(self):
         axis = 'ymin'
-        coordinate = ['1', '2', '3']
-        expectedstring = 'MSG "PathPreview: Hit START to go to ymin: [\'1\', \'2\', \'3\']"\nM00\nG00 X1 Y2 Z3\n\n'
-        self.assertEqual(expectedstring, cpp.get_command_strings(axis, coordinate))
+        coordinate = ['1', '2']
+        expectedstring = 'MSG "PathPreview: Hit START to go to ymin: [\'1\', \'2\']"\nM00\nG00 Z40\nG00 X1 Y2\nG01 Z15 F1200\n\n'
+        self.assertEqual(expectedstring, cpp.get_command_strings(axis, coordinate, ['40', '15']))
 
 
