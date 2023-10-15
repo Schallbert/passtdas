@@ -35,12 +35,14 @@ extreme value to pinpoint. Thus, the CNC interpreter needs to understand that co
 I'm also using a pause command `M00` to have the user press the **Start** button for each pinpoint.
 
 ## How to create and run an executable
-The application Python's supports **setuptools**.
-run `setup.py` in a shell using the following commands:
+The application Python's supports **setuptools**. The following steps assume you have a virtual python environment that
+can run Python's package manager **pip**.
+
+To deploy, type the following commands in a shell within the root folder of this project:
 - `python setup.py --quiet bdist_egg` This will create an eggfile that can just be installed using pip.
 - `.\venv\Scripts\Activate.ps1` Activates the virtual environment in your venv folder
 - `pip install --editable .` Installs the eggfile
-- `cncpathpreview "./test/arcg02ij.tap" -z 10` runs the program, just use your path.
+- `cncpathpreview -f "./test/arcg02ij.tap" -s 30 -p 10` runs the program with custom safety and probe height. just use your path.
 
 ## Example
 You can run the script from command line like this:
