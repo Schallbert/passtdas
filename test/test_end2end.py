@@ -1,5 +1,5 @@
 import unittest
-import cncpathpreview as cpp
+import passtdas as cpp
 from operator import add
 
 def roundlistitems(inputlist):

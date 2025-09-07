@@ -1,0 +1,13 @@
+Metadata-Version: 2.4
+Name: passtdas
+Version: 0.9.2
+Summary: Command-line application to preview CNC paths
+Home-page: https://schallbert.de
+Author: Schallbert
+License-File: LICENSE
+Requires-Dist: Click
+Dynamic: author
+Dynamic: home-page
+Dynamic: license-file
+Dynamic: requires-dist
+Dynamic: summary

@@ -1,7 +1,7 @@
-# cncPathPreview
-![Image: A symbolic image of what cncPathPreview does](/assets/cncpathpreview.png)
+# *passtdas*
+![Image: A symbolic image of what *passtdas* does](/assets/*passtdas*.png)
 
-CNCpathpreview is a small command-line helper application written in Python that takes a G-code file,
+*passtdas* is a small command-line helper application written in Python that takes a G-code file,
 reads its Move-commands `(G00, G01, G02, G03)` and determines maximum and
 minimum values for its movements in `X` and `Y` direction.
 
@@ -17,10 +17,10 @@ Detects "extreme values" of any given move command including arcs that have
 multiple possible values. Supports `G92` coordinate shift and takes them into account.
 
 ## Arguments
-CNCpathPreview has no mandatory argument.
+*passtdas* has no mandatory argument.
 
 ## Parameters
-CNCpathPreview's parameters:
+*passtdas*'s parameters:
 1. `--file` or `-f`: The source file to be analyzed. This parameter is required.
 2. `--zsafety` or `-s` The safety height you want the machine to run to the XY extreme points.
 3. `--zprobe` or `-p` The probe height the machine will go to at the extreme points to simplify manual adjustments
@@ -42,15 +42,15 @@ To deploy, type the following commands in a shell within the root folder of this
 - `python setup.py --quiet bdist_egg` This will create an eggfile that can just be installed using pip.
 - `.\venv\Scripts\Activate.ps1` Activates the virtual environment in your venv folder
 - `pip install --editable .` Installs the eggfile
-- `cncpathpreview -f "./test/arcg02ij.tap" -s 30 -p 10` runs the program with custom safety and probe height. just use your path.
+- `*passtdas* -f "./test/arcg02ij.tap" -s 30 -p 10` runs the program with custom safety and probe height. just use your path.
 
 ## Example
 You can run the script from command line like this:
 
-![Image: running cncPathPreview from command line](/assets/example_executefromconsole.jpg)
+![Image: running *passtdas* from command line](/assets/example_executefromconsole.jpg)
 
 Alternatively, you can deploy an executable and enter the parameters later:
-![Image: running cncPathPreview directly as an Application](/assets/example_executeasapp.jpg)
+![Image: running *passtdas* directly as an Application](/assets/example_executeasapp.jpg)
 
 This is how the output file for a circle of `r=5.66`, `Pcenter(0|0)` will look like.
 The machine will start at XY0 and probe down to a given height. It will then pause using command `M00`.

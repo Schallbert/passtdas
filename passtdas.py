@@ -326,7 +326,7 @@ def get_file_header(targetfilename):
     """Function that creates boilerplate comments for the output G-code file header.
     @:param targetfilename: String that defines the targeted output file
     @:return a String object"""
-    return ('(CNCPathPreview by Schallbert, 2023)\n'
+    return ('(PasstDas by Schallbert, 2023)\n'
             '(Version: ' + VERSION + ')\n'
             '(File output is supplied without liability.)\n'
             '(Output paths must be checked for correctness before usage.)\n'
@@ -336,7 +336,7 @@ def get_file_header(targetfilename):
 
 def echo_boilerplate():
     click.secho(message=\
-"CNC-Pfadvorschau V" + VERSION + "\n\
+"PasstDas CNC-Pfadvorschau V" + VERSION + "\n\
 Autor: Schallbert\n\
 Distributor: technische Dienstleistungen Preusser\n\
 Copyright: 2023\n\
@@ -385,7 +385,7 @@ def path_preview(file, zsafety, zprobe):
     """A small command-line application that takes a G-code file and traces dimensions of the cutting paths.
     Its output is another G-code file to check if the workpiece fits the planned paths."""
     target_path = path.dirname(file.name)
-    target_filename = 'pathpreview_' + path.basename(file.name)
+    target_filename = 'passtdas_' + path.basename(file.name)
 
     data = create_dataset_from_input(file)
     if not data:
