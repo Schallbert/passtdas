@@ -1,5 +1,5 @@
 # *passtdas*
-![Image: A symbolic image of what *passtdas* does](/assets/*passtdas*.png)
+![Image: A symbolic image of what *passtdas* does](/assets/passtdas.png)
 
 *passtdas* is a small command-line helper application written in Python that takes a G-code file,
 reads its Move-commands `(G00, G01, G02, G03)` and determines maximum and

@@ -1,0 +1,18 @@
+{
+    "terminal.integrated.shell.linux": "/bin/bash", // Linux path!
+
+    "python.pythonPath": "${workspaceFolder}/venv/bin/python", // Linux path!
+    "python.testing.enabled": true,
+    "python.testing.unittestEnabled": true,
+    "python.testing.pytestEnabled": false,
+    "python.testing.nosetestsEnabled": false,
+    "python.testing.autoTestDiscoverOnSaveEnabled": true,
+    "python.testing.pytestArgs": [
+        "test"  // Adjust this to your test directory
+    ],
+    "code-runner.executorMap": {
+        "python": "venv/bin/python -u"
+    },
+    "code-runner.runInTerminal": true
+}
+
