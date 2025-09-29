@@ -6,7 +6,7 @@ from math import sqrt, acos, cos, sin, atan, pi, degrees, isclose
 
 # Author: "Schallbert"
 # Created: 2023
-VERSION = '0.9.4'
+VERSION = '0.9.5'
 # License: GPL V3
 
 class MoveType(Enum):
@@ -179,7 +179,7 @@ def handle_arc_move_r(coordinates, previous_coordinates, move_type):
     p1p2_midpoint_y = (coordinates[1] + previous_coordinates[1]) / 2
     p1p2_distance_x = coordinates[0] - previous_coordinates[0]
     p1p2_distance_y = coordinates[1] - previous_coordinates[1]
-    p1p2_distance = sqrt(p1p2_distance_x ** 2 + p1p2_distance_y ** 2)
+    p1p2_distance = round(sqrt(p1p2_distance_x ** 2 + p1p2_distance_y ** 2), 3)
     p1p2_distance_center = sqrt(coordinates[5] ** 2 - ((p1p2_distance / 2) ** 2))
 
     #  case handling where atan is not defined (90°, 270°)
@@ -373,7 +373,7 @@ def convert_int_unsigned(value):
 @click.command()
 @click.option("-f", "--file", prompt="Enter source file path like so: <path/to/my/gcodefile.cnc>",
               help="The file to analyze for CNC job area edge detection",
-              default=None, show_default=True, type=click.File(mode="r"), required=True )
+              default=None, show_default=True, type=click.File(mode="r", errors='replace'), required=True )
 @click.option("-s", "--zsafety", prompt="Enter positive Z-safety height",
               help="Safety Z-height on which the CNC will move to targeted coordinates",
               default=40, show_default=True, type=int, required=False)

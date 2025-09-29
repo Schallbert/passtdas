@@ -100,3 +100,8 @@ M30
 ## Documentation
 You can find the project's documentation on my blog:
 [https://blog.schallbert.de/passtdas/](https://blog.schallbert.de/passtdas/)
+
+## Fixes
+### v0.95
+- Special character "�" leads to exception in filereader `readlines`. Fixed in `pathpreview` method with `type=click.File(mode="r", errors='replace')`
+- `math.domain` error due to float calculation irregularities resulting in negative `sqrt`. Fixed by rounding to µm.
