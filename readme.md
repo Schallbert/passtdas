@@ -105,3 +105,7 @@ You can find the project's documentation on my blog:
 ### v0.95
 - Special character "�" leads to exception in filereader `readlines`. Fixed in `pathpreview` method with `type=click.File(mode="r", errors='replace')`
 - `math.domain` error due to float calculation irregularities resulting in negative `sqrt`. Fixed by rounding to µm.
+
+## Install with VScode
+1. Create virtual environment (e.g. venv)
+2. run `pip install -r requirements.txt` so all required add-on modules are made available in the installation.
